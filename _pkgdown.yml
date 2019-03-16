@@ -1,0 +1,35 @@
+title: FFresearch
+
+url: https://bautheac.github.io/FFresearch
+
+reference:
+  - title: asset pricing factors
+    desc: >
+        Fama & French asset pricing factors data time series:
+    contents:
+      - factors
+  - title: sort portfolios
+    desc: >
+        Fama & French sort potfolios:
+    contents:
+      - portfolios_univariate
+      - portfolios_bivariate
+      - portfolios_trivariate
+      - portfolios_industries
+  - title: others
+    desc: >
+      Helper datasets:
+    contents:
+      - breakpoints
+      - variables
+
+navbar:
+  title: ~
+  type: default
+  left:
+    - text: home
+      href: index.html
+    - text: datasets
+      href: reference/index.html
+
+

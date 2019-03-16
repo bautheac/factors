@@ -1,0 +1,16 @@
+Package: factors
+Type: Package
+Title: Asset pricing research factor time series
+Version: 0.0.1.0
+Authors@R: person("Olivier", "Bauthéac", email = "o.bautheac@gmail.com",
+  role = c("aut", "cre"))
+Description: Various asset pricing research factor time series conveniently packaged for consumption in R.
+License: CC0
+Encoding: UTF-8
+LazyData: no
+Depends: R (>= 3.4.0)
+Imports: 
+  data.table (>= 1.11.4)
+RoxygenNote: 6.1.1
+URL: http://bautheac.github.io/factors
+BugReports: https://github.com/bautheac/factors/issues
