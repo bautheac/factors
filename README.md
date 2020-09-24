@@ -30,11 +30,11 @@ pricing models very popular to the asset pricing enthusiasts:
 
 The ‘Stambaugh et al’ dataset provides the return (factors) and level
 (risk free rate) time series for various research asset pricing factors
-put together by Robert F. Stambaugh and collaborators including
-\<\<\<\<\<\<\< HEAD Lubos Pastor and Yu Yuan. The factors include traded
-& non-traded liquidity (Pástor and Stambaugh 2003), as well as market,
-size and two ‘mispricing’ factors: management & performance (Stambaugh
-and Yuan 2016):
+put together by Robert F. Stambaugh and collaborators including Lubos
+Pastor and Yu Yuan. The factors include traded & non-traded liquidity
+(Pástor and Stambaugh 2003), as well as market, size and two
+‘mispricing’ factors: management & performance (Stambaugh and Yuan
+2016):
 
     #>    frequency               factor period       value
     #> 1:     month non-traded liquidity 196208  0.00437073
