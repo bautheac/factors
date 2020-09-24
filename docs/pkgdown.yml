@@ -1,7 +1,8 @@
-pandoc: 1.19.2.1
-pkgdown: 1.3.0
+pandoc: 2.7.3
+pkgdown: 1.6.1
 pkgdown_sha: ~
-articles: []
+articles: {}
+last_built: 2020-09-24T10:58Z
 urls:
   reference: https://bautheac.github.io/FFresearch/reference
   article: https://bautheac.github.io/FFresearch/articles
