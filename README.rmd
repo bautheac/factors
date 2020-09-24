@@ -29,7 +29,8 @@ head(`Fama & French`)
 
 ### Stambaugh et al
 The 'Stambaugh et al' dataset provides the return (factors) and level (risk free rate) time series for various research asset pricing factors put together by Robert F. Stambaugh and collaborators including
-Lubos Pastor and Yu Yuan. The factors include traded & non-traded liquidity [@pastor_liquidity_2003], as well as market, size and two 'mispricing' factors: management & performance [@stambaugh_mispricing_2016]:
+<<<<<<< HEAD
+Lubos Pastor and Yu Yuan. The factors include traded & non-traded liquidity [@pastor_liquidity_2003], as well as market, size and two 'mispricing' factors: management & performance [@stambaugh_mispricing_2016]:  
 ```{r, `Stambaugh et al.`, echo = FALSE}
 head(`Stambaugh et al`)
 ```
