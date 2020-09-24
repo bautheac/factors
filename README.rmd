@@ -18,7 +18,7 @@ data(list = c("Fama & French", "Stambaugh et al"), package = "factors")
 
 <style> body {text-align: justify} </style>
 
-## factors
+
 Various asset pricing research factor time series conveniently packaged for consumption by R users. The data is pulled directly from authors' website. Install from [github](https://github.com/bautheac/factors/) with `devtools::install_github("bautheac/factors")`.
 
 ### Fama & French
@@ -29,7 +29,8 @@ head(`Fama & French`)
 
 ### Stambaugh et al
 The 'Stambaugh et al' dataset provides the return (factors) and level (risk free rate) time series for various research asset pricing factors put together by Robert F. Stambaugh and collaborators including
-Lubos Pastor and Yu Yuan. The factors include traded & non-traded liquidity [@pastor_liquidity_2003], as well as market, size and two 'mispricing' factors: management & performance [@stambaugh_mispricing_2016]:
+<<<<<<< HEAD
+Lubos Pastor and Yu Yuan. The factors include traded & non-traded liquidity [@pastor_liquidity_2003], as well as market, size and two 'mispricing' factors: management & performance [@stambaugh_mispricing_2016]:  
 ```{r, `Stambaugh et al.`, echo = FALSE}
 head(`Stambaugh et al`)
 ```
