@@ -18,7 +18,6 @@ data(list = c("Fama & French", "Stambaugh et al"), package = "factors")
 
 <style> body {text-align: justify} </style>
 
-
 Various asset pricing research factor time series conveniently packaged for consumption by R users. The data is pulled directly from authors' website. Install from [github](https://github.com/bautheac/factors/) with `devtools::install_github("bautheac/factors")`.
 
 ### Fama & French
@@ -32,6 +31,8 @@ The 'Stambaugh et al' dataset provides the return (factors) and level (risk free
 ```{r, `Stambaugh et al.`, echo = FALSE}
 head(`Stambaugh et al`)
 ```
+
+
 
 ## References
 

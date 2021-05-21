@@ -11,6 +11,6 @@ LazyData: no
 Depends: R (>= 3.4.0)
 Imports: 
   data.table (>= 1.11.4)
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.1
 URL: http://bautheac.github.io/factors
 BugReports: https://github.com/bautheac/factors/issues

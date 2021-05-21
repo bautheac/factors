@@ -4,8 +4,10 @@ library(magrittr); library(doParallel)
 cluster <- makeCluster(detectCores() - 1L); registerDoParallel(cluster)
 
 # Fama & French ####
-for (j in readxl::read_xlsx(path = "data-raw/urls.xlsx", sheet = "factors")$data) download.file(j, destfile = paste0("data-raw/", stringr::str_match(j, "(?<=ftp/).+\\.zip")), method = "libcurl")
-start <- lubridate::year("2018-12-31") - 50L
+for (j in readxl::read_xlsx(path = "data-raw/urls.xlsx", sheet = "factors")$data)
+  download.file(j, destfile = paste0("data-raw/", stringr::str_match(j, "(?<=ftp/).+\\.zip")), method = "libcurl")
+# start <- lubridate::year("2018-12-31") - 50L
+start <- lubridate::year(Sys.Date()) - 50L
 
 ## contemporaneous ####
 gc(); urls <- readxl::read_xlsx(path = "data-raw/urls.xlsx", sheet = "factors") %>% dplyr::filter(type == "contemporaneous")
@@ -96,7 +98,7 @@ usethis::use_data(`Fama & French`, overwrite = TRUE); remove(contemporaneous, `p
 # Stambaugh (2003) ####
 
 ## liquidity (Pastor–Stambaugh (2003)) ####
-liquidity <- data.table::fread("http://finance.wharton.upenn.edu/~stambaug/liq_data_1962_2017.txt", fill = T, skip = 11L) %>%
+liquidity <- data.table::fread("http://finance.wharton.upenn.edu/~stambaug/liq_data_1962_2020.txt", fill = T, skip = 11L) %>%
   dplyr::select(1L, 3L:4L) %>% setNames(c("period", "non-traded liquidity", "traded liquidity")) %>%
   tidyr::gather(factor, value, -period) %>% dplyr::mutate(field = "return", frequency = "month") %>%
   dplyr::select(frequency, factor, field, period, value)
