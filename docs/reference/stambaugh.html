@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Function reference • factors</title>
+<title>Stambaugh et al. research factors — stambaugh • factors</title>
 
 
 <!-- jquery -->
@@ -39,7 +39,11 @@
 
 
 
-<meta property="og:title" content="Function reference" />
+<meta property="og:title" content="Stambaugh et al. research factors — stambaugh" />
+<meta property="og:description" content="Return (factors) and level (risk free rate) time series for various research asset
+  pricing factors put together by Robert F. Stambaugh and collaborators including
+  Lubos Pastor and Yu Yuan. The factors include liquidity (traded &amp;amp; non-traded),
+  market, size as well as two 'mispricing' factors: management &amp;amp; performance." />
 
 
 
@@ -58,7 +62,7 @@
   </head>
 
   <body data-spy="scroll" data-target="#toc">
-    <div class="container template-reference-index">
+    <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -102,61 +106,37 @@
       </header>
 
 <div class="row">
-  <div class="contents col-md-9">
+  <div class="col-md-9 contents">
     <div class="page-header">
-      <h1>Reference</h1>
+    <h1>Stambaugh et al. research factors</h1>
+    <small class="dont-index">Source: <a href='https://github.com/bautheac/factors/blob/master/R/data.r'><code>R/data.r</code></a></small>
+    <div class="hidden name"><code>stambaugh.Rd</code></div>
     </div>
 
-    <table class="ref-index">
+    <div class="ref-description">
+    <p>Return (factors) and level (risk free rate) time series for various research asset
+  pricing factors put together by Robert F. Stambaugh and collaborators including
+  Lubos Pastor and Yu Yuan. The factors include liquidity (traded &amp; non-traded),
+  market, size as well as two 'mispricing' factors: management &amp; performance.</p>
+    </div>
 
-    <colgroup>
-      
-      <col class="alias" />
-      <col class="title" />
-    </colgroup>
+    <pre class="usage"><span class='va'>stambaugh</span></pre>
 
-    <tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-fama-french" class="hasAnchor"><a href="#section-fama-french" class="anchor"></a>Fama &amp; French</h2>
-          <p class="section-desc"><p>Fama &amp; French asset pricing factors data time series:</p></p>
-        </th>
-      </tr>
-      
-      
-    </tbody><tbody>
-      
-      
-      <tr>
-        
-        <td>
-          <p><code><a href="fama_french.html">fama_french</a></code> </p>
-        </td>
-        <td><p>Fama/French research factors</p></td>
-      </tr>
-    </tbody><tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-stambaugh-et-al" class="hasAnchor"><a href="#section-stambaugh-et-al" class="anchor"></a>Stambaugh et al</h2>
-          <p class="section-desc"><p>Asset pricing factors data time series from Robert F. Stambaugh and collaborators:</p></p>
-        </th>
-      </tr>
-      
-      
-    </tbody><tbody>
-      
-      
-      <tr>
-        
-        <td>
-          <p><code><a href="stambaugh.html">stambaugh</a></code> </p>
-        </td>
-        <td><p>Stambaugh et al. research factors</p></td>
-      </tr>
-    </tbody>
-    </table>
+
+    <h2 class="hasAnchor" id="format"><a class="anchor" href="#format"></a>Format</h2>
+
+    <p>A data.table with variables:</p><ul>
+<li><p>frequency: factor return frequency (day, month, year).</p></li>
+<li><p>period: period over which factor returns are calculated or risk free rate level is observed.</p></li>
+<li><p>factor: Fama/French factor</p></li>
+<li><p>value: corresponding return (factors) or level (risk free rate) observation.</p></li>
+</ul>
+
+    <h2 class="hasAnchor" id="source"><a class="anchor" href="#source"></a>Source</h2>
+
+    <p><a href='http://finance.wharton.upenn.edu/~stambaug'>http://finance.wharton.upenn.edu/~stambaug</a>.</p>
+
   </div>
-
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
       <h2 data-toc-skip>Contents</h2>

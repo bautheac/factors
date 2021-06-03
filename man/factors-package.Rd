@@ -4,7 +4,7 @@
 \name{factors-package}
 \alias{factors}
 \alias{factors-package}
-\title{factors: Asset pricing research factor time series}
+\title{factors: Clean time series datasets for asset pricing factors popular in the literature.}
 \description{
 Various asset pricing research factor time series conveniently packaged for consumption in R.
 }

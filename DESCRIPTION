@@ -1,6 +1,6 @@
 Package: factors
 Type: Package
-Title: Asset pricing research factor time series
+Title: Clean time series datasets for asset pricing factors popular in the literature.
 Version: 0.0.1.0
 Authors@R: person("Olivier", "Bauthéac", email = "o.bautheac@gmail.com",
   role = c("aut", "cre"))

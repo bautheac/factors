@@ -17,3 +17,6 @@ data("variables")
 
 portfolios_bivariate
 dplyr::distinct(portfolios_univariate, field)
+
+library(factors)
+data("Stambaugh et al")

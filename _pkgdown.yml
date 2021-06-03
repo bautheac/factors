@@ -1,27 +1,18 @@
-title: FFresearch
+title: factors
 
-url: https://bautheac.github.io/FFresearch
+url: https://bautheac.github.io/factors
 
 reference:
-  - title: asset pricing factors
+  - title: Fama & French
     desc: >
         Fama & French asset pricing factors data time series:
     contents:
-      - factors
-  - title: sort portfolios
+      - fama_french
+  - title: Stambaugh et al
     desc: >
-        Fama & French sort potfolios:
+        Asset pricing factors data time series from Robert F. Stambaugh and collaborators:
     contents:
-      - portfolios_univariate
-      - portfolios_bivariate
-      - portfolios_trivariate
-      - portfolios_industries
-  - title: others
-    desc: >
-      Helper datasets:
-    contents:
-      - breakpoints
-      - variables
+      - stambaugh
 
 navbar:
   title: ~

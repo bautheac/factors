@@ -13,7 +13,7 @@ folder <- "literature_files"; dir.create(folder)
 download.file("https://www.dropbox.com/s/htnd7o9nnkk8ng8/references.bib?dl=1", paste(folder, "references.bib", sep = "/"))
 
 library(factors)
-data(list = c("Fama & French", "Stambaugh et al"), package = "factors")
+data(list = c("fama_french", "stambaugh"), package = "factors")
 ```
 
 <style> body {text-align: justify} </style>
@@ -21,15 +21,15 @@ data(list = c("Fama & French", "Stambaugh et al"), package = "factors")
 Various asset pricing research factor time series conveniently packaged for consumption by R users. The data is pulled directly from authors' website. Install from [github](https://github.com/bautheac/factors/) with `devtools::install_github("bautheac/factors")`.
 
 ### Fama & French
-The 'Fama & French' dataset provides the return (factors) and level (risk free rate) time series for the classic Fama/French asset pricing factors as used in their three [@fama_cross_section_1992; @fama_common_1993; @fama_size_1995] and most recently five-factor [@fama_five_factor_2015; @fama_dissecting_2016; @fama_international_2017] asset pricing models very popular to the asset pricing enthusiasts:
-```{r, `Fama & French`, echo = FALSE}
-head(`Fama & French`)
+The `fama_french` dataset provides the return (factors) and level (risk free rate) time series for the classic Fama/French asset pricing factors as used in their three [@fama_cross_section_1992; @fama_common_1993; @fama_size_1995] and most recently five-factor [@fama_five_factor_2015; @fama_dissecting_2016; @fama_international_2017] asset pricing models very popular to the asset pricing enthusiasts:
+```{r, fama_french, echo = FALSE}
+head(fama_french)
 ```
 
 ### Stambaugh et al
-The 'Stambaugh et al' dataset provides the return (factors) and level (risk free rate) time series for various research asset pricing factors put together by Robert F. Stambaugh and collaborators including Lubos Pastor and Yu Yuan. The factors include traded & non-traded liquidity [@pastor_liquidity_2003], as well as market, size and two 'mispricing' factors: management & performance [@stambaugh_mispricing_2016]:  
-```{r, `Stambaugh et al.`, echo = FALSE}
-head(`Stambaugh et al`)
+The `stambaugh` dataset provides the return (factors) and level (risk free rate) time series for various research asset pricing factors put together by Robert F. Stambaugh and collaborators including Lubos Pastor and Yu Yuan. The factors include traded & non-traded liquidity [@pastor_liquidity_2003], as well as market, size and two 'mispricing' factors: management & performance [@stambaugh_mispricing_2016]:  
+```{r, stambaugh, echo = FALSE}
+head(stambaugh)
 ```
 
 

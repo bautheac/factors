@@ -12,37 +12,36 @@ with `devtools::install_github("bautheac/factors")`.
 
 ### Fama & French
 
-The ‘Fama & French’ dataset provides the return (factors) and level
-(risk free rate) time series for the classic Fama/French asset pricing
-factors as used in their three (Fama and French 1992, 1993, 1995) and
-most recently five-factor (Fama and French 2015, 2016, 2017) asset
-pricing models very popular to the asset pricing enthusiasts:
+The `fama_french` dataset provides the return (factors) and level (risk
+free rate) time series for the classic Fama/French asset pricing factors
+as used in their three (Fama and French 1992, 1993, 1995) and most
+recently five-factor (Fama and French 2015, 2016, 2017) asset pricing
+models very popular to the asset pricing enthusiasts:
 
     #>    region frequency factor period value
-    #> 1:     US     month    CMA 196801  6.45
-    #> 2:     US     month    CMA 196802  2.48
-    #> 3:     US     month    CMA 196803 -1.15
-    #> 4:     US     month    CMA 196804 -3.66
-    #> 5:     US     month    CMA 196805 -1.85
-    #> 6:     US     month    CMA 196806  2.65
+    #> 1:     US     month    CMA 197101 -0.14
+    #> 2:     US     month    CMA 197102 -0.72
+    #> 3:     US     month    CMA 197103 -2.69
+    #> 4:     US     month    CMA 197104  0.72
+    #> 5:     US     month    CMA 197105  0.30
+    #> 6:     US     month    CMA 197106 -1.74
 
 ### Stambaugh et al
 
-The ‘Stambaugh et al’ dataset provides the return (factors) and level
-(risk free rate) time series for various research asset pricing factors
-put together by Robert F. Stambaugh and collaborators including Lubos
-Pastor and Yu Yuan. The factors include traded & non-traded liquidity
-(Pástor and Stambaugh 2003), as well as market, size and two
-‘mispricing’ factors: management & performance (Stambaugh and Yuan
-2016):
+The `stambaugh` dataset provides the return (factors) and level (risk
+free rate) time series for various research asset pricing factors put
+together by Robert F. Stambaugh and collaborators including Lubos Pastor
+and Yu Yuan. The factors include traded & non-traded liquidity (Pástor
+and Stambaugh 2003), as well as market, size and two ‘mispricing’
+factors: management & performance (Stambaugh and Yuan 2016):
 
     #>    frequency               factor period       value
-    #> 1:     month non-traded liquidity 196208  0.00437073
-    #> 2:     month non-traded liquidity 196209  0.01230259
-    #> 3:     month non-traded liquidity 196210 -0.07407571
-    #> 4:     month non-traded liquidity 196211  0.02923186
-    #> 5:     month non-traded liquidity 196212  0.01592809
-    #> 6:     month non-traded liquidity 196301  0.01013548
+    #> 1:     month non-traded liquidity 196208  0.00426023
+    #> 2:     month non-traded liquidity 196209  0.01172080
+    #> 3:     month non-traded liquidity 196210 -0.07442466
+    #> 4:     month non-traded liquidity 196211  0.02854555
+    #> 5:     month non-traded liquidity 196212  0.01435009
+    #> 6:     month non-traded liquidity 196301  0.00947839
 
 ## References
 

@@ -16,7 +16,7 @@
 #'
 #' @importFrom data.table data.table
 #'
-"Fama & French"
+"fama_french"
 
 
 #' Stambaugh et al. research factors
@@ -38,4 +38,4 @@
 #'
 #' @importFrom data.table data.table
 #'
-"Stambaugh et al"
+"stambaugh"

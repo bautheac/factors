@@ -87,11 +87,11 @@ gc(); urls <- readxl::read_xlsx(path = "data-raw/urls.xlsx", sheet = "factors") 
 
 factors <- plyr::rbind.fill(contemporaneous, `prior returns`)
 
-`Fama & French` <- setNames(factors, tolower(names(factors))) %>% dplyr::mutate(period = trimws(period, which = "both")) %>%
+fama_french <- setNames(factors, tolower(names(factors))) %>% dplyr::mutate(period = trimws(period, which = "both")) %>%
   dplyr::select(region, frequency, factor, period, value = return) %>% dplyr::arrange(region, frequency, factor, period) %>%
   data.table::data.table()
 
-usethis::use_data(`Fama & French`, overwrite = TRUE); remove(contemporaneous, `prior returns`, factors, `Fama & French`); gc()
+usethis::use_data(fama_french, overwrite = TRUE); remove(contemporaneous, `prior returns`, factors, fama_french); gc()
 
 
 
@@ -116,10 +116,10 @@ month <- data.table::fread("http://finance.wharton.upenn.edu/~stambaug/M4.csv") 
 ## merge ####
 # `Stambaugh et al.` <- dplyr::bind_rows(liquidity, day, month) %>% dplyr::mutate(field = ifelse(factor == "risk free rate", "level", field)) %>%
 #   data.table::as.data.table()
-`Stambaugh et al` <- dplyr::bind_rows(liquidity, day, month) %>% dplyr::select(-field) %>% data.table::as.data.table()
+stambaugh <- dplyr::bind_rows(liquidity, day, month) %>% dplyr::select(-field) %>% data.table::as.data.table()
 
 ## save ####
-usethis::use_data(`Stambaugh et al`, overwrite = TRUE); remove(`Stambaugh et al`)
+usethis::use_data(stambaugh, overwrite = TRUE); remove(stambaugh)
 
 
 
