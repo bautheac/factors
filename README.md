@@ -5,9 +5,9 @@ factors
 
 <style> body {text-align: justify} </style>
 
-Various asset pricing research factor time series conveniently packaged
-for consumption by R users. The data is pulled directly from authors’
-website. Install from [github](https://github.com/bautheac/factors/)
+[factors](https://github.com/bautheac/factors/) packages various asset
+pricing research factor time series for convenient consumption by R
+users. The data is pulled directly from authors’ website. Install from
 with `devtools::install_github("bautheac/factors")`.
 
 ### Fama & French
@@ -42,6 +42,13 @@ factors: management & performance (Stambaugh and Yuan 2016):
     #> 4:     month non-traded liquidity 196211  0.02854555
     #> 5:     month non-traded liquidity 196212  0.01435009
     #> 6:     month non-traded liquidity 196301  0.00947839
+
+### finRes
+
+Although the [factors](https://bautheac.github.io/factors/) package is
+self-contained it belongs to the
+[finRes](https://bautheac.github.io/finRes/) suite of packages where it
+helps with asset pricing research and analysis.
 
 ## References
 

@@ -18,7 +18,7 @@ data(list = c("fama_french", "stambaugh"), package = "factors")
 
 <style> body {text-align: justify} </style>
 
-Various asset pricing research factor time series conveniently packaged for consumption by R users. The data is pulled directly from authors' website. Install from [github](https://github.com/bautheac/factors/) with `devtools::install_github("bautheac/factors")`.
+[factors](https://github.com/bautheac/factors/) packages various asset pricing research factor time series for convenient consumption by R users. The data is pulled directly from authors' website. Install from  with `devtools::install_github("bautheac/factors")`.
 
 ### Fama & French
 The `fama_french` dataset provides the return (factors) and level (risk free rate) time series for the classic Fama/French asset pricing factors as used in their three [@fama_cross_section_1992; @fama_common_1993; @fama_size_1995] and most recently five-factor [@fama_five_factor_2015; @fama_dissecting_2016; @fama_international_2017] asset pricing models very popular to the asset pricing enthusiasts:
@@ -33,6 +33,8 @@ head(stambaugh)
 ```
 
 
+### finRes   
+Although the [factors](https://bautheac.github.io/factors/) package is self-contained it belongs to the [finRes](https://bautheac.github.io/finRes/) suite of packages where it helps with asset pricing research and analysis.  
 
 ## References
 
