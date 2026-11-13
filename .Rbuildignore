@@ -5,3 +5,5 @@
 ^data-raw$
 ^development$
 ^AGENTS\.md$
+^\.worktrees$
+^\.github$
