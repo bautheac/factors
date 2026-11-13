@@ -17,7 +17,7 @@ A \linkS4class{data.table} with variables:
 \url{http://finance.wharton.upenn.edu/~stambaug}.
 }
 \usage{
-stambaugh
+data(stambaugh)
 }
 \description{
 Return (factors) and level (risk free rate) time series for various research asset
