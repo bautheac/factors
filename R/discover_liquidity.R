@@ -13,6 +13,7 @@
 #'   latest end year is returned. Errors if no file name matches.
 #'
 #' @keywords internal
+#' @noRd
 discover_liquidity_file <- function(index_lines) {
   pattern <- "liq_data_1962_(\\d{4})\\.txt"
   matches <- unlist(regmatches(index_lines, gregexpr(pattern, index_lines)))

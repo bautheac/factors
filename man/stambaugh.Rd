@@ -5,7 +5,7 @@
 \alias{stambaugh}
 \title{Stambaugh et al. research factors}
 \format{
-A \linkS4class{data.table} with variables:
+A \link[data.table:data.table-class]{data.table} with variables:
 \itemize{
   \item{frequency: factor return frequency (day, month); character.}
   \item{factor: Stambaugh factor; character. One of non-traded liquidity, traded
@@ -17,9 +17,9 @@ A \linkS4class{data.table} with variables:
 }
 }
 \source{
-\url{http://finance.wharton.upenn.edu/~stambaug/} (redirects to
-  \url{https://fnce.wharton.upenn.edu/profile/stambaug/}); the data files are served
-  from faculty.wharton.upenn.edu. Liquidity factors: Pastor & Stambaugh (2003),
+\url{https://fnce.wharton.upenn.edu/profile/stambaug/} (the former
+  finance.wharton.upenn.edu/~stambaug/ address redirects there); the data files
+  are served from faculty.wharton.upenn.edu. Liquidity factors: Pastor & Stambaugh (2003),
   "Liquidity Risk and Expected Stock Returns", Journal of Political Economy 111(3),
   642-685, \doi{10.1086/374184}. Size, management, performance, market and risk free
   rate: Stambaugh & Yuan (2017), "Mispricing Factors", The Review of Financial Studies

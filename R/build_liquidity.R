@@ -10,7 +10,7 @@
 #'   liquidity level, non-traded liquidity factor, traded liquidity factor).
 #'   Rows may carry a trailing tab.
 #'
-#' @return A \linkS4class{data.table} with columns `frequency`, `factor`,
+#' @return A \link[data.table:data.table-class]{data.table} with columns `frequency`, `factor`,
 #'   `period` and `value`, in that order. `frequency` is `"month"`, `factor`
 #'   is `"non-traded liquidity"` or `"traded liquidity"`, `period` is the
 #'   source `YYYYMM` string and `value` is numeric. Values equal to the `-99`
@@ -18,6 +18,7 @@
 #'   liquidity level (column 2) is not used.
 #'
 #' @keywords internal
+#' @noRd
 build_liquidity <- function(lines) {
   lines <- lines[!startsWith(lines, "%")]
   fields <- strsplit(lines, "\t", fixed = TRUE)

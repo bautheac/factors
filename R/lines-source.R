@@ -9,6 +9,7 @@
 #' @return A character vector, one element per line.
 #'
 #' @keywords internal
+#' @noRd
 lines_from_path <- function(path) {
   readLines(path, warn = FALSE)
 }
@@ -23,6 +24,7 @@ lines_from_path <- function(path) {
 #' @return A character vector, one element per line.
 #'
 #' @keywords internal
+#' @noRd
 lines_from_url <- function(url) {
   readLines(url, warn = FALSE)
 }

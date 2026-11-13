@@ -7,7 +7,7 @@
 #'   (Suggests): there is no runtime dependency, and no French data is downloaded or
 #'   parsed here. Rebuild with development/rebuild_fama_french.R.
 #'
-#' @format A \linkS4class{data.table} with variables:
+#' @format A \link[data.table:data.table-class]{data.table} with variables:
 #' \itemize{
 #'   \item{region: geographical market considered for factor construction; factor with
 #'     levels US, developed, developed (ex US), Europe, JP, Asia-Pacific (ex JP),
@@ -39,7 +39,7 @@
 #'   All factors are constructed from US stocks; see Details for the verification
 #'   against the source papers.
 #'
-#' @format A \linkS4class{data.table} with variables:
+#' @format A \link[data.table:data.table-class]{data.table} with variables:
 #' \itemize{
 #'   \item{frequency: factor return frequency (day, month); character.}
 #'   \item{factor: Stambaugh factor; character. One of non-traded liquidity, traded
@@ -50,9 +50,9 @@
 #'     numeric.}
 #' }
 #'
-#' @source \url{http://finance.wharton.upenn.edu/~stambaug/} (redirects to
-#'   \url{https://fnce.wharton.upenn.edu/profile/stambaug/}); the data files are served
-#'   from faculty.wharton.upenn.edu. Liquidity factors: Pastor & Stambaugh (2003),
+#' @source \url{https://fnce.wharton.upenn.edu/profile/stambaug/} (the former
+#'   finance.wharton.upenn.edu/~stambaug/ address redirects there); the data files
+#'   are served from faculty.wharton.upenn.edu. Liquidity factors: Pastor & Stambaugh (2003),
 #'   "Liquidity Risk and Expected Stock Returns", Journal of Political Economy 111(3),
 #'   642-685, \doi{10.1086/374184}. Size, management, performance, market and risk free
 #'   rate: Stambaugh & Yuan (2017), "Mispricing Factors", The Review of Financial Studies

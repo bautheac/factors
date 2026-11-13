@@ -10,7 +10,7 @@
 #'   followed by comma-separated data rows.
 #' @param frequency Either `"day"` or `"month"`.
 #'
-#' @return A \linkS4class{data.table} with columns `frequency`, `factor`,
+#' @return A \link[data.table:data.table-class]{data.table} with columns `frequency`, `factor`,
 #'   `period` and `value`, in that order. Factors are `size` (SMB),
 #'   `management` (MGMT), `performance` (PERF), `risk free rate` (RF) and
 #'   `market` (MKTRF + RF). `period` is character (`YYYYMM` or `YYYYMMDD`),
@@ -18,6 +18,7 @@
 #'   `NA` and those rows are dropped.
 #'
 #' @keywords internal
+#' @noRd
 build_mispricing <- function(lines, frequency) {
   if (!is.character(frequency) || length(frequency) != 1L ||
       !frequency %in% c("day", "month")) {

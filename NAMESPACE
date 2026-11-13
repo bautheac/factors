@@ -5,3 +5,4 @@ importFrom(data.table,
   data.table,
   rbindlist
 )
+importFrom(utils,data)

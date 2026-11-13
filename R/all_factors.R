@@ -8,7 +8,7 @@
 #'   \link{stambaugh} dataset). Defaults to both. An unknown source name is an
 #'   error.
 #'
-#' @return A \linkS4class{data.table} with columns `source`, `region`,
+#' @return A \link[data.table:data.table-class]{data.table} with columns `source`, `region`,
 #'   `frequency`, `factor`, `period` and `value`, in that order. `source` is
 #'   `"French"` or `"Stambaugh"`. French rows come first, then Stambaugh,
 #'   regardless of the order of `sources`. All columns are character except
@@ -31,6 +31,7 @@
 #' all_factors("stambaugh")
 #'
 #' @importFrom data.table data.table rbindlist
+#' @importFrom utils data
 #'
 #' @export
 all_factors <- function(sources = c("french", "stambaugh")) {

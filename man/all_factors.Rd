@@ -13,7 +13,7 @@ all_factors(sources = c("french", "stambaugh"))
 error.}
 }
 \value{
-A \linkS4class{data.table} with columns `source`, `region`,
+A \link[data.table:data.table-class]{data.table} with columns `source`, `region`,
   `frequency`, `factor`, `period` and `value`, in that order. `source` is
   `"French"` or `"Stambaugh"`. French rows come first, then Stambaugh,
   regardless of the order of `sources`. All columns are character except
