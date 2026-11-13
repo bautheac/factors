@@ -4,19 +4,25 @@
 \alias{all_factors}
 \title{All factors in one table}
 \usage{
-all_factors(sources = "stambaugh")
+all_factors(sources = c("french", "stambaugh"))
 }
 \arguments{
-\item{sources}{Source names to include. Currently only `"stambaugh"`
-(the default) is supported.}
+\item{sources}{Character vector of source names to include: `"french"`
+(the shipped \link{fama_french} dataset) and/or `"stambaugh"` (the shipped
+\link{stambaugh} dataset). Defaults to both. An unknown source name is an
+error.}
 }
 \value{
 A \linkS4class{data.table} with columns `source`, `region`,
-  `frequency`, `factor`, `period` and `value`, in that order.
+  `frequency`, `factor`, `period` and `value`, in that order. `source` is
+  `"French"` or `"Stambaugh"`. French rows come first, then Stambaugh,
+  regardless of the order of `sources`. All columns are character except
+  `value` (numeric); `fama_french`'s factor columns are coerced to
+  character.
 }
 \description{
 Returns the package's factor datasets in a single long-format
-  table. Currently only the Stambaugh source is available.
+  table.
 }
 \details{
 Stambaugh rows are labelled `region = "US"`; this assumes both
