@@ -4,7 +4,7 @@
 \name{factors-package}
 \alias{factors}
 \alias{factors-package}
-\title{factors: Clean time series datasets for asset pricing factors popular in the literature.}
+\title{factors: Clean time series datasets for asset pricing factors popular in the literature}
 \description{
 Various asset pricing research factor time series conveniently packaged for consumption in R.
 }
@@ -18,6 +18,11 @@ Useful links:
 }
 \author{
 \strong{Maintainer}: Olivier Bauthéac \email{o.bautheac@gmail.com}
+
+Authors:
+\itemize{
+  \item Olivier Bauthéac \email{o.bautheac@gmail.com}
+}
 
 }
 \keyword{internal}

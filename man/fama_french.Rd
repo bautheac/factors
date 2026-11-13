@@ -18,7 +18,7 @@ A \linkS4class{data.table} with variables:
 \url{http://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html}.
 }
 \usage{
-fama_french
+data(fama_french)
 }
 \description{
 Return (factors) and level (risk free rate) time series for the Fama/French
