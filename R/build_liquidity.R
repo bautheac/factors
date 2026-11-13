@@ -10,7 +10,7 @@
 #'   liquidity level, non-traded liquidity factor, traded liquidity factor).
 #'   Rows may carry a trailing tab.
 #'
-#' @return A \linkS4class{data.table} with columns `frequency`, `factor`,
+#' @return A \link[data.table:data.table-class]{data.table} with columns `frequency`, `factor`,
 #'   `period` and `value`, in that order. `frequency` is `"month"`, `factor`
 #'   is `"non-traded liquidity"` or `"traded liquidity"`, `period` is the
 #'   source `YYYYMM` string and `value` is numeric. Values equal to the `-99`
@@ -18,6 +18,7 @@
 #'   liquidity level (column 2) is not used.
 #'
 #' @keywords internal
+#' @noRd
 build_liquidity <- function(lines) {
   lines <- lines[!startsWith(lines, "%")]
   fields <- strsplit(lines, "\t", fixed = TRUE)
@@ -28,19 +29,14 @@ build_liquidity <- function(lines) {
     `traded liquidity` = as.numeric(vapply(fields, `[[`, character(1), 4L))
   )
 
-  long <- data.table::melt(
-    wide,
-    id.vars = "period",
-    variable.name = "factor",
-    value.name = "value",
-    variable.factor = FALSE
-  )
+  for (col in c("non-traded liquidity", "traded liquidity")) {
+    data.table::set(
+      wide,
+      i = which(wide[[col]] %in% -99),
+      j = col,
+      value = NA_real_
+    )
+  }
 
-  sentinel <- !is.na(long$value) & long$value == -99
-  long$value[sentinel] <- NA_real_
-  long <- long[!is.na(long$value)]
-
-  long$frequency <- "month"
-  data.table::setcolorder(long, c("frequency", "factor", "period", "value"))
-  long
+  reshape_factors(wide, "month")
 }

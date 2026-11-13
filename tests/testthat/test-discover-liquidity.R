@@ -25,3 +25,18 @@ test_that("discover_liquidity_file errors clearly when no file matches", {
   )
   expect_error(discover_liquidity_file(character(0)), "No liquidity data file matching")
 })
+
+test_that("discover_liquidity_file finds files whose start year is not 1962", {
+  lines <- '<li><a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2026/11/liq_data_1963_2030.txt">liquidity series</a></li>'
+
+  expect_identical(discover_liquidity_file(lines), "liq_data_1963_2030.txt")
+})
+
+test_that("discover_liquidity_file picks the latest end year across start years", {
+  lines <- c(
+    '<a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2016/11/liq_data_1962_2025.txt">current</a>',
+    '<a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2026/11/liq_data_1926_2030.txt">extended</a>'
+  )
+
+  expect_identical(discover_liquidity_file(lines), "liq_data_1926_2030.txt")
+})

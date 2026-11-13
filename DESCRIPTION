@@ -1,6 +1,6 @@
 Package: factors
 Type: Package
-Title: Clean time series datasets for asset pricing factors popular in the literature
+Title: Clean Time Series Datasets for Asset Pricing Factors Popular in the Literature
 Version: 0.1.0
 Authors@R: person("Olivier", "Bauthéac", email = "o.bautheac@gmail.com",
   role = c("aut", "cre"))
@@ -13,8 +13,9 @@ Imports:
   data.table (>= 1.11.4)
 Suggests: 
   testthat (>= 3.0.0),
-  FFresearch
+  FFresearch,
+  pkgload
 Config/testthat/edition: 3
-URL: http://bautheac.github.io/factors
+URL: https://bautheac.github.io/factors/
 BugReports: https://github.com/bautheac/factors/issues
 Config/roxygen2/version: 8.1.1

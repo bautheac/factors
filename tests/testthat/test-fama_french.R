@@ -44,3 +44,13 @@ test_that("fama_french value has no NA", {
 
   expect_false(anyNA(fama_french$value))
 })
+
+test_that("fama_french records the FFresearch version used for the snapshot", {
+  data("fama_french", package = "factors", envir = environment())
+
+  version <- attr(fama_french, "ffresearch_version")
+  expect_type(version, "character")
+  expect_length(version, 1L)
+  expect_false(is.na(version))
+  expect_match(version, "^[0-9]+(\\.[0-9]+)+$")
+})

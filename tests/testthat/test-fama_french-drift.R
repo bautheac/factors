@@ -29,4 +29,11 @@ test_that("fama_french is in sync with the installed FFresearch::factors", {
 
   expect_equal(nrow(shipped), nrow(expected), info = rerun)
   expect_equal(shipped, expected, info = rerun)
+
+  # The recorded snapshot version must match the installed FFresearch.
+  expect_identical(
+    attr(fama_french, "ffresearch_version"),
+    as.character(packageVersion("FFresearch")),
+    info = rerun
+  )
 })
