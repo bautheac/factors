@@ -3,9 +3,13 @@
 # Download URLs are scraped from the index page (the old ~stambaug file URLs
 # are dead) and the liquidity file name is discovered, not hard-coded.
 # Downloads are cached in git-ignored data-raw/cache/; a cached file is not
-# downloaded again.
+# downloaded again, so a rebuild does not refetch unchanged files. To force
+# re-downloads, run with --force (Rscript development/rebuild_stambaugh.R
+# --force); deleting data-raw/cache/ also forces re-download.
 
 pkgload::load_all(quiet = TRUE)
+
+force <- "--force" %in% commandArgs(trailingOnly = TRUE)
 
 cache_dir <- "data-raw/cache"
 dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
@@ -26,9 +30,9 @@ pick_url <- function(name) {
   url
 }
 
-fetch_cached <- function(url) {
+fetch_cached <- function(url, force = FALSE) {
   path <- file.path(cache_dir, basename(url))
-  if (file.exists(path)) {
+  if (!force && file.exists(path)) {
     cat("Cache hit:", path, "\n")
   } else {
     cat("Downloading", url, "\n")
@@ -37,9 +41,9 @@ fetch_cached <- function(url) {
   path
 }
 
-liquidity <- build_liquidity(lines_from_path(fetch_cached(pick_url(liquidity_name))))
-month <- build_mispricing(lines_from_path(fetch_cached(pick_url("M4.csv"))), "month")
-day <- build_mispricing(lines_from_path(fetch_cached(pick_url("M4d.csv"))), "day")
+liquidity <- build_liquidity(lines_from_path(fetch_cached(pick_url(liquidity_name), force)))
+month <- build_mispricing(lines_from_path(fetch_cached(pick_url("M4.csv"), force)), "month")
+day <- build_mispricing(lines_from_path(fetch_cached(pick_url("M4d.csv"), force)), "day")
 
 stambaugh <- data.table::rbindlist(list(liquidity, month, day))
 

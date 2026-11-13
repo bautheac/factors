@@ -35,5 +35,8 @@ Return (factors) and level (risk free rate) time series for the Fama/French
 }
 \details{
 US monthly factors cover 192602-202609.
+
+  The FFresearch version used for the snapshot is recorded on the dataset
+  itself: `attr(fama_french, "ffresearch_version")`.
 }
 \keyword{datasets}
