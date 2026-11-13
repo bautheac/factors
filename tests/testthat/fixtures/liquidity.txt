@@ -1,0 +1,21 @@
+% LIQUIDITY FACTORS OF PASTOR AND STAMBAUGH (JPE 2003) UPDATED THROUGH DEC 2025
+% Column 1: Month
+% Column 2: Levels of aggregated liquidity (Figure 1 in the paper)
+% Column 3: Innovations in aggregated liquidity (non-traded liquidity factor; equation(8); the main series)
+% Column 4: Traded liquidity factor (LIQ_V, 10-1 portfolio return)
+% Note: The traded factor is the value-weighted return on the 10-1 portfolio from a sort on historical
+% liquidity betas. This procedure is simpler than sorting on predicted betas (as in the original study)
+% and through 2025 it is similarly successful at creating a spread in post-ranking betas. The traded
+% factor has a positive and significant alpha through 2025, consistent with liquidity risk being priced.
+%
+% Month	Agg Liq.	Innov Liq (eq8)	Traded Liq (LIQ_V)
+196708	  0.02907322	  0.07046546	-99
+196709	  0.02354400	  0.03128358	-99
+196710	 -0.03057043	 -0.04273159	-99
+196711	 -0.03066821	 -0.01380812	-99
+196712	  0.00158985	  0.03347359	-99
+196801	 -0.02152292	  0.00277601	 -0.02725374	
+196802	 -0.04012737	 -0.02540306	  0.02387298	
+196803	 -0.11694720	 -0.08725577	  0.00783476	
+196804	  0.02245336	  0.08557644	  0.00450124	
+196805	 -0.02061336	  0.01335513	 -0.01657204	
