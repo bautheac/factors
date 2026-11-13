@@ -7,11 +7,16 @@
 \format{
 A \linkS4class{data.table} with variables:
 \itemize{
-  \item{region: geographical market considered for factor construction.}
-  \item{frequency: factor return frequency (day, month, year).}
-  \item{period: period over which factor returns are calculated or risk free rate level is observed.}
-  \item{factor: Fama/French factor}
-  \item{value: corresponding return (factors) or level (risk free rate) observation.}
+  \item{region: geographical market considered for factor construction; factor with
+    levels US, developed, developed (ex US), Europe, JP, Asia-Pacific (ex JP),
+    North America.}
+  \item{frequency: factor return frequency; factor with levels month, day, year.}
+  \item{factor: Fama/French factor; character. One of CMA, HML, LT_Rev, market, Mom,
+    risk free rate, RMW, SMB, ST_Rev, WML.}
+  \item{period: period over which factor returns are calculated or risk free rate level
+    is observed; character, YYYYMM (month), YYYYMMDD (day) or YYYY (year).}
+  \item{value: corresponding return (factors) or level (risk free rate) observation;
+    numeric.}
 }
 }
 \source{
@@ -22,6 +27,13 @@ data(fama_french)
 }
 \description{
 Return (factors) and level (risk free rate) time series for the Fama/French
-  asset pricing factors.
+  asset pricing factors. A snapshot of the \code{factors} dataset from the FFresearch
+  package, version 0.0.1.0 (bautheac/FFresearch master, including PR #17), snapshotted
+  2026-11-13; not built in this package. FFresearch is a build-time dependency only
+  (Suggests): there is no runtime dependency, and no French data is downloaded or
+  parsed here. Rebuild with development/rebuild_fama_french.R.
+}
+\details{
+US monthly factors cover 192602-202609.
 }
 \keyword{datasets}

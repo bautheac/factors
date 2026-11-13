@@ -25,6 +25,19 @@ Returns the package's factor datasets in a single long-format
   table.
 }
 \details{
-Stambaugh rows are labelled `region = "US"`; this assumes both
-  Stambaugh papers use US stocks, an assumption that is unverified.
+Stambaugh rows are labelled `region = "US"`: both Stambaugh papers
+  build their factors from US stocks (ordinary common shares on
+  NYSE/AMEX/NASDAQ, CRSP), verified against the papers; see \link{stambaugh}.
+  `market` and `risk free rate` are shared names across sources and mean the
+  same thing. Other factors keep distinct names (French `SMB` and Stambaugh
+  `size`, for example, are different constructions) and are told apart by
+  `source`. `period` stays character in each source's own format (`YYYYMM`,
+  `YYYYMMDD` or `YYYY`); the formats are comparable across sources. Both
+  datasets ship with the package, so there is no runtime dependency on
+  FFresearch.
+}
+\examples{
+all_factors()
+all_factors("stambaugh")
+
 }
