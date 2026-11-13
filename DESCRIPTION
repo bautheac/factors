@@ -16,6 +16,6 @@ Suggests:
   FFresearch,
   pkgload
 Config/testthat/edition: 3
-URL: https://bautheac.github.io/factors
+URL: https://bautheac.github.io/factors/
 BugReports: https://github.com/bautheac/factors/issues
 Config/roxygen2/version: 8.1.1

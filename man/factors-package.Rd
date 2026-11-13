@@ -11,7 +11,7 @@ Various asset pricing research factor time series conveniently packaged for cons
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://bautheac.github.io/factors}
+  \item \url{https://bautheac.github.io/factors/}
   \item Report bugs at \url{https://github.com/bautheac/factors/issues}
 }
 
