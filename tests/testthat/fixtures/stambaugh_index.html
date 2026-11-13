@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<!--[if IE 8 ]>
+	<html class="no-js ie8" lang="en-US">
+<![endif]-->
+<!--[if IE 9 ]>
+	<html class="no-js ie9" lang="en-US">
+<![endif]-->
+<!--[if gt IE 9]><!-->
+<html lang="en-US"><!--<![endif]-->
+	<head>
+			<script id="upenn-onetrust-consent-policy">
+	window.upennConsentDefaultOff = true;
+(function (window, document) {
+    'use strict';
+    if (window.upennConsentPolicy) { return; }
+    var defaultOff = window.upennConsentDefaultOff === true;
+    var subscribers = [];
+    var explicitChoice = false;
+    var current;
+
+    function cookie(name) {
+        var match = ('; ' + (document.cookie || '')).split('; ' + name + '=');
+        if (match.length < 2) { return ''; }
+        try { return decodeURIComponent(match.pop().split(';')[0]); }
+        catch (error) { return ''; }
+    }
+    function stored() {
+        var value = cookie('OptanonConsent');
+        var count = value.match(/(?:^|&)interactionCount=(\d+)/);
+        var groups = value.match(/(?:^|&)groups=([^&]*)/);
+        // OneTrust also writes initialization defaults. Only a saved choice
+        // (or privacy signal) overrides the default-on policy before interaction.
+        var chosen = !!cookie('OptanonAlertBoxClosed') || (count && Number(count[1]) > 0)
+            || /(?:^|&)(?:isGpcEnabled|browserGpcFlag)=1(?:&|$)/.test(value);
+        if (!groups || (!defaultOff && !chosen)) { return null; }
+        return groups[1].split(',').filter(function (entry) {
+            return /:1$/.test(entry);
+        }).map(function (entry) { return entry.split(':')[0]; });
+    }
+    function normalize(groups) {
+        return (Array.isArray(groups) ? groups : typeof groups === 'string' ? groups.split(',') : [])
+            .map(function (group) { return String(group).trim(); }).filter(Boolean);
+    }
+    function resolve(groups) {
+        var saved = stored();
+        if (defaultOff || explicitChoice || saved !== null) {
+            return groups !== undefined && groups !== null ? normalize(groups) : saved || ['C0001', 'C0003'];
+        }
+        return ['C0001', 'C0002', 'C0003', 'C0004'];
+    }
+    function update(groups, chosen) {
+        explicitChoice = explicitChoice || chosen === true;
+        current = resolve(groups);
+        subscribers.forEach(function (callback) { callback(current.slice()); });
+    }
+    // Prefer the saved choice during startup, even if an early SDK global
+    // still contains initialization defaults. Live events take over afterwards.
+    current = stored();
+    if (current === null) { current = resolve(window.OnetrustActiveGroups); }
+    window.upennConsentPolicy = {
+        getGroups: function () { return current.slice(); },
+        subscribe: function (callback) { subscribers.push(callback); callback(current.slice()); },
+        updateFromGroups: function (groups) { update(groups, true); }
+    };
+    window.addEventListener('OneTrustGroupsUpdated', function (event) {
+        update(event && event.detail !== undefined ? event.detail : window.OnetrustActiveGroups, false);
+    });
+    window.addEventListener('OTConsentApplied', function () {
+        update(window.OnetrustActiveGroups, true);
+    });
+}(window, document));
+	</script>
+	<script id="upenn-iframe-consent-bridge">
+		(function () {
+			'use strict';
+
+			var allowedOrigins = ["https:\/\/go.pardot.com","https:\/\/apps.wharton.upenn.edu","https:\/\/mba-pardot.marcomm.wharton.upenn.edu","https:\/\/online-pardot.marcomm.wharton.upenn.edu","https:\/\/wemba-pardot.marcomm.wharton.upenn.edu","https:\/\/academy-pardot.marcomm.wharton.upenn.edu","https:\/\/globalyouth-pardot.wharton.upenn.edu","https:\/\/msqf-pardot.pardot.marcomm.wharton.upenn.edu"];
+			var registeredChildren = [];
+			var state = {
+				C0001: true,
+				C0002: false,
+				C0003: true,
+				C0004: false
+			};
+
+			function parseGroups(groups) {
+				var active = [];
+				var next = {
+					C0001: false,
+					C0002: false,
+					C0003: false,
+					C0004: false
+				};
+
+				if (Array.isArray(groups)) {
+					active = groups;
+				} else if (typeof groups === 'string') {
+					active = groups.split(',');
+				}
+
+				active.forEach(function (group) {
+					var key = String(group).trim();
+					if (Object.prototype.hasOwnProperty.call(next, key)) {
+						next[key] = true;
+					}
+				});
+
+				return next;
+			}
+
+			function buildMessage() {
+				return {
+					type: 'upenn.onetrust.consent',
+					version: 1,
+					consent: {
+						analytics: state.C0002,
+						advertising: state.C0004
+					},
+					groups: {
+						C0001: state.C0001,
+						C0002: state.C0002,
+						C0003: state.C0003,
+						C0004: state.C0004
+					}
+				};
+			}
+
+			function sendTo(child) {
+				if (
+					!child ||
+					!child.source ||
+					typeof child.source.postMessage !== 'function'
+				) {
+					return;
+				}
+
+				child.source.postMessage(buildMessage(), child.origin);
+			}
+
+			function publish() {
+				registeredChildren.forEach(sendTo);
+			}
+
+			function updateFromGroups(groups) {
+				state = parseGroups(groups);
+				publish();
+			}
+
+			function isAllowedOrigin(origin) {
+				return allowedOrigins.indexOf(origin) !== -1;
+			}
+
+			function registerChild(source, origin) {
+				var exists = registeredChildren.some(function (child) {
+					return child.source === source && child.origin === origin;
+				});
+
+				if (!exists) {
+					registeredChildren.push({ source: source, origin: origin });
+				}
+
+				sendTo({ source: source, origin: origin });
+			}
+
+			window.upennIframeConsentBridge = {
+				updateFromGroups: window.upennConsentPolicy.updateFromGroups
+			};
+
+			window.upennConsentPolicy.subscribe(updateFromGroups);
+
+			window.addEventListener('message', function (event) {
+				var data = event.data;
+
+				if (
+					!data ||
+					data.type !== 'upenn.onetrust.ready' ||
+					data.version !== 1 ||
+					!event.source ||
+					!isAllowedOrigin(event.origin)
+				) {
+					return;
+				}
+
+				registerChild(event.source, event.origin);
+			});
+
+		}());
+	</script>
+
+	<style id="upenn-onetrust-embed-styles">
+		.upenn-onetrust-embed {
+			position: relative;
+		}
+
+		.upenn-onetrust-embed--absolute {
+			position: static;
+		}
+
+		.upenn-onetrust-embed__placeholder {
+			position: absolute;
+			inset: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 1rem;
+			text-align: center;
+		}
+
+		.upenn-onetrust-embed__placeholder[hidden] {
+			display: none;
+		}
+
+		.upenn-onetrust-embed iframe:not([src]) {
+			visibility: hidden;
+		}
+
+		.upenn-onetrust-embed__settings:focus-visible {
+			outline: 2px solid currentColor;
+			outline-offset: 2px;
+		}
+
+	</style>
+
+	<!-- OneTrust Cookies Consent Notice start for upenn.edu -->
+	<script
+		type="text/javascript"
+		src="https://cdn.cookielaw.org/consent/019efefd-a67f-723b-a8f3-c265c8af6b83/OtAutoBlock.js">
+	</script>
+
+	<script
+		type="text/javascript"
+		src="https://cdn.cookielaw.org/scripttemplates/otSDKStub.js"
+		charset="UTF-8"
+		data-domain-script="019efefd-a67f-723b-a8f3-c265c8af6b83">
+	</script>
+
+	<script type="text/javascript">
+		function OptanonWrapper() {}
+	</script>
+	<!-- OneTrust Cookies Consent Notice end for upenn.edu -->
+			          <!-- Google Tag Manager - The Wharton School-->
+        <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-MZQZFC4');</script>
+        <!-- End Google Tag Manager -->
+    <!-- Google Tag Manager - Executive Education-->
+            		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="profile" href="http://gmpg.org/xfn/11">
+		<link rel="pingback" href="https://fnce.wharton.upenn.edu/xmlrpc.php">
+		<link rel="icon" type="image/x-icon" href="https://fnce.wharton.upenn.edu/wp-content/plugins/martech-chupacabra/includes/images/favicon.ico" /><link rel="apple-touch-icon" sizes="180x180" href="https://fnce.wharton.upenn.edu/wp-content/plugins/martech-chupacabra/includes/images/apple-touch-icon.png" /><link rel="mask-icon" color="#004785" href="https://fnce.wharton.upenn.edu/wp-content/plugins/martech-chupacabra/includes/images/penn-logo-mask.svg" /><script type="text/javascript">window.ajaxurl = "https://fnce.wharton.upenn.edu/wp-admin/admin-ajax.php"</script>
+		<meta name='robots' content='max-image-preview:large, index,follow' />
+
+		
+	<!-- This site is optimized with the Yoast SEO Premium plugin v28.1 (Yoast SEO v28.1) - https://yoast.com/product/yoast-seo-premium-wordpress/ -->
+	<title>Robert F. Stambaugh &#8211; Finance Department</title>
+	<link rel="canonical" href="https://fnce.wharton.upenn.edu/profile/stambaug/" />
+	<meta property="og:locale" content="en_US" />
+	<meta property="og:type" content="article" />
+	<meta property="og:url" content="/" />
+	<meta property="og:site_name" content="Finance Department" />
+	<meta property="article:modified_time" content="2026-10-14T09:06:21+00:00" />
+	<meta property="og:image" content="https://faculty.wharton.upenn.edu/wp-content/uploads/2016/11/Robert_Stambaugh_3760_2429_crop-129x139.jpg" />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:image" content="https://faculty.wharton.upenn.edu/wp-content/uploads/2016/11/Robert_Stambaugh_3760_2429_crop-129x139.jpg" />
+	<script type="application/ld+json" class="yoast-schema-graph">{"@context":"https:\/\/schema.org","@graph":[{"@type":"WebSite","@id":"https:\/\/fnce.wharton.upenn.edu\/#website","url":"https:\/\/fnce.wharton.upenn.edu\/","name":"Finance Department","description":"A Wharton &quot;Blank Slate&quot;","potentialAction":[{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https:\/\/fnce.wharton.upenn.edu\/?s={search_term_string}"},"query-input":{"@type":"PropertyValueSpecification","valueRequired":true,"valueName":"search_term_string"}}],"inLanguage":"en-US"}]}</script>
+	<!-- / Yoast SEO Premium plugin. -->
+
+
+<link rel='dns-prefetch' href='//fnce.wharton.upenn.edu' />
+<link rel="alternate" type="application/rss+xml" title="Finance Department &raquo; Feed" href="https://fnce.wharton.upenn.edu/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Finance Department &raquo; Comments Feed" href="https://fnce.wharton.upenn.edu/comments/feed/" />
+<link rel="alternate" type="application/rss+xml" title="Finance Department &raquo; Robert F. Stambaugh Comments Feed" href="https://fnce.wharton.upenn.edu/?p=18812651/feed/" />
+<style id="wp-img-auto-sizes-contain-inline-css">
+img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
+/*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+</style>
+<link rel='stylesheet' id='wpmf-bakery-style-css' href='https://fnce.wharton.upenn.edu/wp-content/plugins/wp-media-folder/assets/css/vc_style.css?ver=6.2.8' media='all' />
+<link rel='stylesheet' id='wpmf-bakery-display-gallery-style-css' href='https://fnce.wharton.upenn.edu/wp-content/plugins/wp-media-folder/assets/css/display-gallery/style-display-gallery.css?ver=6.2.8' media='all' />
+<style id="wp-emoji-styles-inline-css">
+
+	img.wp-smiley, img.emoji {
+		display: inline !important;
+		border: none !important;
+		box-shadow: none !important;
+		height: 1em !important;
+		width: 1em !important;
+		margin: 0 0.07em !important;
+		vertical-align: -0.1em !important;
+		background: none !important;
+		padding: 0 !important;
+	}
+/*# sourceURL=wp-emoji-styles-inline-css */
+</style>
+<style id="wp-block-library-inline-css">
+:root{--wp-block-synced-color:#7a00df;--wp-block-synced-color--rgb:122,0,223;--wp-bound-block-color:var(--wp-block-synced-color);--wp-editor-canvas-background:#ddd;--wp-admin-theme-color:#007cba;--wp-admin-theme-color--rgb:0,124,186;--wp-admin-theme-color-darker-10:#006ba1;--wp-admin-theme-color-darker-10--rgb:0,107,160.5;--wp-admin-theme-color-darker-20:#005a87;--wp-admin-theme-color-darker-20--rgb:0,90,135;--wp-admin-border-width-focus:2px}@media (min-resolution:192dpi){:root{--wp-admin-border-width-focus:1.5px}}.wp-element-button{cursor:pointer}:root .has-very-light-gray-background-color{background-color:#eee}:root .has-very-dark-gray-background-color{background-color:#313131}:root .has-very-light-gray-color{color:#eee}:root .has-very-dark-gray-color{color:#313131}:root .has-vivid-green-cyan-to-vivid-cyan-blue-gradient-background{background:linear-gradient(135deg,#00d084,#0693e3)}:root .has-purple-crush-gradient-background{background:linear-gradient(135deg,#34e2e4,#4721fb 50%,#ab1dfe)}:root .has-hazy-dawn-gradient-background{background:linear-gradient(135deg,#faaca8,#dad0ec)}:root .has-subdued-olive-gradient-background{background:linear-gradient(135deg,#fafae1,#67a671)}:root .has-atomic-cream-gradient-background{background:linear-gradient(135deg,#fdd79a,#004a59)}:root .has-nightshade-gradient-background{background:linear-gradient(135deg,#330968,#31cdcf)}:root .has-midnight-gradient-background{background:linear-gradient(135deg,#020381,#2874fc)}:root{--wp--preset--font-size--normal:16px;--wp--preset--font-size--huge:42px}.has-regular-font-size{font-size:1em}.has-larger-font-size{font-size:2.625em}.has-normal-font-size{font-size:var(--wp--preset--font-size--normal)}.has-huge-font-size{font-size:var(--wp--preset--font-size--huge)}:root .has-text-align-center{text-align:center}:root .has-text-align-left{text-align:left}:root .has-text-align-right{text-align:right}.has-fit-text{white-space:nowrap!important}#end-resizable-editor-section{display:none}.aligncenter{clear:both}.items-justified-left{justify-content:flex-start}.items-justified-center{justify-content:center}.items-justified-right{justify-content:flex-end}.items-justified-space-between{justify-content:space-between}.screen-reader-text{word-wrap:normal!important;border:0;clip-path:inset(50%);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px;word-break:normal!important}.screen-reader-text:focus{background-color:#ddd;clip-path:none;color:#444;display:block;font-size:1em;height:auto;left:5px;line-height:normal;padding:15px 23px 14px;text-decoration:none;top:5px;width:auto;z-index:100000}html :where(.has-border-color){border-style:solid}html :where([style^=border-color],[style*=";border-color"],[style*="; border-color"]){border-style:solid}html :where([style^=border-top-color],[style*=";border-top-color"],[style*="; border-top-color"]){border-top-style:solid}html :where([style^=border-right-color],[style*=";border-right-color"],[style*="; border-right-color"]){border-right-style:solid}html :where([style^=border-bottom-color],[style*=";border-bottom-color"],[style*="; border-bottom-color"]){border-bottom-style:solid}html :where([style^=border-left-color],[style*=";border-left-color"],[style*="; border-left-color"]){border-left-style:solid}html :where([style^=border-width],[style*=";border-width"],[style*="; border-width"]){border-style:solid}html :where([style^=border-top-width],[style*=";border-top-width"],[style*="; border-top-width"]){border-top-style:solid}html :where([style^=border-right-width],[style*=";border-right-width"],[style*="; border-right-width"]){border-right-style:solid}html :where([style^=border-bottom-width],[style*=";border-bottom-width"],[style*="; border-bottom-width"]){border-bottom-style:solid}html :where([style^=border-left-width],[style*=";border-left-width"],[style*="; border-left-width"]){border-left-style:solid}html :where(img[class*=wp-image-]){height:auto;max-width:100%}:where(figure){margin:0 0 1em}html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:var(--wp-admin--admin-bar--height,0px)}@media screen and (max-width:600px){html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:0px}}
+
+/*# sourceURL=/wp-includes/css/dist/block-library/common.min.css */
+</style>
+<style id="classic-theme-styles-inline-css">
+/*! This file is auto-generated */
+.wp-block-button__link{color:#fff;background-color:#32373c;border-radius:9999px;box-shadow:none;text-decoration:none;padding:calc(.667em + 2px) calc(1.333em + 2px);font-size:1.125em}.wp-block-file__button{background:#32373c;color:#fff;text-decoration:none}
+/*# sourceURL=/wp-includes/css/classic-themes.min.css */
+</style>
+
+<link rel='stylesheet' id='wpmf-gallery-popup-style-css' href='https://fnce.wharton.upenn.edu/wp-content/plugins/wp-media-folder/assets/css/display-gallery/magnific-popup.css?ver=6.2.8' media='all' />
+<style id="global-styles-inline-css">
+:root{--wp--preset--aspect-ratio--square: 1;--wp--preset--aspect-ratio--4-3: 4/3;--wp--preset--aspect-ratio--3-4: 3/4;--wp--preset--aspect-ratio--3-2: 3/2;--wp--preset--aspect-ratio--2-3: 2/3;--wp--preset--aspect-ratio--16-9: 16/9;--wp--preset--aspect-ratio--9-16: 9/16;--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgb(6,147,227) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgb(252,185,0) 0%,rgb(255,105,0) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgb(255,105,0) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgb(255, 255, 255), 6px 6px rgb(0, 0, 0);--wp--preset--shadow--crisp: 6px 6px 0px rgb(0, 0, 0);}.wp-block-button{--wp--preset--dimension--25: 25%;--wp--preset--dimension--50: 50%;--wp--preset--dimension--75: 75%;--wp--preset--dimension--100: 100%;}:where(body) { margin: 0; }:where(.is-layout-flex){gap: 0.5em;}:where(.is-layout-grid){gap: 0.5em;}body .is-layout-flex{display: flex;}.is-layout-flex{flex-wrap: wrap;align-items: center;}.is-layout-flex > :is(*, div){margin: 0;}body .is-layout-grid{display: grid;}.is-layout-grid > :is(*, div){margin: 0;}body{padding-top: 0px;padding-right: 0px;padding-bottom: 0px;padding-left: 0px;}:root :where(.wp-element-button, .wp-block-button__link){background-color: #32373c;border-width: 0;color: #fff;font-family: inherit;font-size: inherit;font-style: inherit;font-weight: inherit;letter-spacing: inherit;line-height: inherit;padding-top: calc(0.667em + 2px);padding-right: calc(1.333em + 2px);padding-bottom: calc(0.667em + 2px);padding-left: calc(1.333em + 2px);text-decoration: none;text-transform: inherit;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+/*# sourceURL=global-styles-inline-css */
+</style>
+
+<link rel='stylesheet' id='wpa-css-css' href='https://fnce.wharton.upenn.edu/wp-content/plugins/honeypot/includes/css/wpa.css?ver=2.2.10' media='all' />
+<link rel='stylesheet' id='responsive-mobile-style-css' href='https://fnce.wharton.upenn.edu/wp-content/themes/responsive-mobile/css/style.css?ver=0.0.10' media='all' />
+<link rel='stylesheet' id='vc_plugin_table_style_css-css' href='https://fnce.wharton.upenn.edu/wp-content/plugins/easy-tables-vc/assets/css/style.min.css?ver=2.2.0' media='all' />
+<link rel='stylesheet' id='vc_plugin_themes_css-css' href='https://fnce.wharton.upenn.edu/wp-content/plugins/easy-tables-vc/assets/css/themes.min.css?ver=2.2.0' media='all' />
+<link rel='stylesheet' id='js_composer_custom_css-css' href='//fnce.wharton.upenn.edu/wp-content/uploads/js_composer/custom.css?ver=9.1' media='all' />
+<link rel='stylesheet' id='martech-chupacabra-style-css' href='https://fnce.wharton.upenn.edu/wp-content/plugins/martech-chupacabra/includes/css/style-v2.css?ver=3.52.9' media='all' />
+<link rel='stylesheet' id='martech-chupacabra-style-v3-css' href='https://fnce.wharton.upenn.edu/wp-content/plugins/martech-chupacabra/includes/css/style.css?ver=3.52.9' media='all' />
+<link rel='stylesheet' id='martech-chupacabra-style-print-css' href='https://fnce.wharton.upenn.edu/wp-content/plugins/martech-chupacabra/includes/css/print.css?ver=3.52.9' media='print' />
+<link rel='stylesheet' id='responsive-mobile-child-style-css' href='https://fnce.wharton.upenn.edu/wp-content/themes/Chupe2-0-child/style.css?ver=1.0' media='all' />
+<link rel='stylesheet' id='wdp_styles-css' href='https://fnce.wharton.upenn.edu/wp-content/plugins/wharton-department-platform/includes/css/style.css?ver=1.8.4' media='all' />
+<link rel='stylesheet' id='wdp_jsgrid-css' href='https://fnce.wharton.upenn.edu/wp-content/plugins/wharton-department-platform/includes/css/jsgrid.min.css?ver=1.5.2' media='all' />
+<link rel='stylesheet' id='wdp_jsgrid_theme-css' href='https://fnce.wharton.upenn.edu/wp-content/plugins/wharton-department-platform/includes/css/jsgrid-theme.min.css?ver=1.5.2' media='all' />
+<link rel='stylesheet' id='bsf-Defaults-css' href='https://fnce.wharton.upenn.edu/wp-content/uploads/smile_fonts/Defaults/Defaults.css?ver=3.21.6' media='all' />
+<script id="jquery-core-js" src="https://fnce.wharton.upenn.edu/wp-includes/js/jquery/jquery.min.js?ver=3.7.1"></script>
+<script id="jquery-migrate-js" src="https://fnce.wharton.upenn.edu/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1"></script>
+<script id="fac-js-js" src="https://fnce.wharton.upenn.edu/wp-content/plugins/martech-chupacabra/includes/lib/fast-average-color/browser.min.js?ver=3.52.9"></script>
+<script></script><link rel="https://api.w.org/" href="https://fnce.wharton.upenn.edu/wp-json/" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://fnce.wharton.upenn.edu/xmlrpc.php?rsd" />
+<meta name="generator" content="WordPress 7.1.4" />
+<meta name="martech:page-title" content="Robert F. Stambaugh">
+<meta name="martech:site-title" content="Finance Department">
+<meta name="martech:site-pname" content="wharton-fnce">
+<meta name="martech:site-penv" content="live">
+<meta name="martech:site-hostname" content="fnce.wharton.upenn.edu">
+<meta name="martech:archive" content="false">
+<meta name="martech:home" content="false">
+<meta name="martech:content-type" content="faculty">
+<meta name="martech:thumbnail" content="https://fnce.wharton.upenn.edu/wp-content/plugins/martech-chupacabra/includes/images/social.png">
+<meta name="martech:date-created" content="2016-11-29T09:24:06Z">
+<meta name="martech:date-modified" content="2026-10-14T09:06:21Z">
+<meta name="martech:date-published" content="2016-11-29T09:24:06Z">
+
+        <script type="text/javascript">
+            var jQueryMigrateHelperHasSentDowngrade = false;
+
+			window.onerror = function( msg, url, line, col, error ) {
+				// Break out early, do not processing if a downgrade reqeust was already sent.
+				if ( jQueryMigrateHelperHasSentDowngrade ) {
+					return true;
+                }
+
+				var xhr = new XMLHttpRequest();
+				var nonce = 'f4c7a98035';
+				var jQueryFunctions = [
+					'andSelf',
+					'browser',
+					'live',
+					'boxModel',
+					'support.boxModel',
+					'size',
+					'swap',
+					'clean',
+					'sub',
+                ];
+				var match_pattern = /\)\.(.+?) is not a function/;
+                var erroredFunction = msg.match( match_pattern );
+
+                // If there was no matching functions, do not try to downgrade.
+                if ( typeof erroredFunction !== 'object' || typeof erroredFunction[1] === "undefined" || -1 === jQueryFunctions.indexOf( erroredFunction[1] ) ) {
+                    return true;
+                }
+
+                // Set that we've now attempted a downgrade request.
+                jQueryMigrateHelperHasSentDowngrade = true;
+
+				xhr.open( 'POST', 'https://fnce.wharton.upenn.edu/wp-admin/admin-ajax.php' );
+				xhr.setRequestHeader( 'Content-Type', 'application/x-www-form-urlencoded' );
+				xhr.onload = function () {
+					var response,
+                        reload = false;
+
+					if ( 200 === xhr.status ) {
+                        try {
+                        	response = JSON.parse( xhr.response );
+
+                        	reload = response.data.reload;
+                        } catch ( e ) {
+                        	reload = false;
+                        }
+                    }
+
+					// Automatically reload the page if a deprecation caused an automatic downgrade, ensure visitors get the best possible experience.
+					if ( reload ) {
+						location.reload();
+                    }
+				};
+
+				xhr.send( encodeURI( 'action=jquery-migrate-downgrade-version&_wpnonce=' + nonce ) );
+
+				// Suppress error alerts in older browsers
+				return true;
+			}
+        </script>
+
+		<meta name="martech:intranet" content="false"><meta name="generator" content="Powered by WPBakery Page Builder - drag and drop page builder for WordPress."/>
+<noscript><style> .wpb_animate_when_almost_visible { opacity: 1; }</style></noscript>	</head>
+
+<body class="wp-singular wfp_profile-template-default single single-wfp_profile postid-18812651 wp-theme-responsive-mobile wp-child-theme-Chupe2-0-child default-site-header wharton-fnce martech-menu--dropdown-click group-blog full-window-home-page-header wpb-js-composer js-comp-ver-9.1 vc_responsive wharton-cms full-width-page" itemscope="itemscope" itemtype="http://schema.org/WebPage">
+            <!-- Google Tag Manager (noscript) The Wharton School-->
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MZQZFC4" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <!-- End Google Tag Manager (noscript) -->
+                <div id="container" class="site">
+	<nav id="jump-links" aria-label="Jump links">
+		<a class="skip-link screen-reader-text" href="#main">Skip to content</a>
+		<a class="skip-link screen-reader-text" href="#main-navigation">Skip to main menu</a>
+	</nav>
+	<header id="header" class="container-full-width site-header" role="banner" itemscope="itemscope" itemtype="http://schema.org/WPHeader">
+		<div id="top-menu-container" class="group header--container">
+			<a href="https://www.wharton.upenn.edu" class="global-brand" title="Wharton Home"><img src="https://fnce.wharton.upenn.edu/wp-content/plugins/martech-chupacabra/includes/images/wharton-logo.svg" alt="Wharton" class="screen"/><img class="print"  style="display:none;" alt="Logo for The Wharton School" src="https://fnce.wharton.upenn.edu/wp-content/plugins/martech-chupacabra/includes/images/Wharton-Logo-RGB.png" /></a>	<ul class="global-nav">
+				<li class="martech-nav-faculty-and-research"><a href="https://www.wharton.upenn.edu/faculty-research-publications/">Faculty</a></li>
+				<li class="martech-nav-youth-program"><a href="https://globalyouth.wharton.upenn.edu">Youth Program</a></li>
+				<li class="martech-nav-undergrad"><a href="https://undergrad.wharton.upenn.edu">Undergrad</a></li>
+				<li class="martech-nav-msqf"><a href="https://jacobs-msqf.wharton.upenn.edu">Jacobs MSQF</a></li>
+				<li class="martech-nav-mba"><a href="https://mba.wharton.upenn.edu">MBA</a></li>
+				<li class="martech-nav-emba"><a href="https://executivemba.wharton.upenn.edu">EMBA</a></li>
+				<li class="martech-nav-phd"><a href="https://doctoral.wharton.upenn.edu">PhD</a></li>
+				<li class="martech-nav-executive-education"><a href="https://executiveeducation.wharton.upenn.edu">Exec Ed</a></li>
+				<li class="martech-nav-wharton-online"><a href="https://executiveeducation.wharton.upenn.edu/online-learning/">Wharton Online</a></li>
+				<li class="martech-nav-kw"><a href="https://knowledge.wharton.upenn.edu"><img src="https://fnce.wharton.upenn.edu/wp-content/plugins/martech-chupacabra/includes/images/kw-logo.svg" alt="Knowledge at Wharton" class="kw-header-logo"/></a></li>
+			</ul>        <a href="/search/" class="search-button search--closed">
+        <span class="accessible-label">Search Wharton</span>
+    </a>
+    <button id="mobile-nav-button" aria-label="Mobile menu toggle">
+        <span class="accessible-label">Mobile menu toggle</span>
+    </button>
+		</div>
+		<div class="main-navigation header--container main-navigation--dropdown-click">
+			<div class="header-row">
+				<div id="martech-site-branding">
+					<div class="martech-site-branding-container group">
+						    <div id="department" class="department department--text">
+    	<div class="department-inner">
+	        <a class="dept-container" title="Finance Department" href="https://fnce.wharton.upenn.edu/">
+					            <div class="brand-text brand-text--desktop"  height="53">Finance Department</div>
+	        </a>
+	    </div>
+    </div>
+    											</div>
+				</div>
+				<!-- main menu -->
+				<div id="main-menu-container" class="container-full-width">
+					<nav id="main-navigation" class="site-navigation" itemscope="itemscope" itemtype="http://schema.org/SiteNavigationElement" aria-label="Primary navigation links">
+						<div id="mobile-current-item">Menu</div>
+												<div class="main-nav group"><ul id="menu-header-navigation" class="menu-header-navigation"><li id="menu-item-339" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-339"><a href="https://fnce.wharton.upenn.edu/">Home</a></li>
+<li id="menu-item-337" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-337"><a href="https://fnce.wharton.upenn.edu/faculty/">Faculty</a>
+<ul class="sub-menu">
+	<li id="menu-item-169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-169"><a href="https://fnce.wharton.upenn.edu/faculty/faculty-list/">Faculty List</a></li>
+	<li id="menu-item-167" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-167"><a href="https://fnce.wharton.upenn.edu/faculty/faculty-awards/">Faculty Awards</a></li>
+	<li id="menu-item-216" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-216"><a href="https://fnce.wharton.upenn.edu/faculty/open-faculty-positions/">Open Faculty Positions</a></li>
+	<li id="menu-item-168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-168"><a href="https://fnce.wharton.upenn.edu/faculty/faculty-in-the-news/">Faculty in the News</a></li>
+</ul>
+</li>
+<li id="menu-item-176" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-176"><a href="https://fnce.wharton.upenn.edu/research-listing/">Research</a>
+<ul class="sub-menu">
+	<li id="menu-item-3346" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-3346"><a href="https://fnce.wharton.upenn.edu/faculty-publications/">Publications Highlights</a></li>
+	<li id="menu-item-284" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-284"><a href="https://fnce.wharton.upenn.edu/research-centers/">Research Centers</a></li>
+</ul>
+</li>
+<li id="menu-item-293" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-293"><a href="https://fnce.wharton.upenn.edu/department-information/seminars/">Seminars</a>
+<ul class="sub-menu">
+	<li id="menu-item-2129" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-2129"><a href="https://fnce.wharton.upenn.edu/department-information/seminars/macro-seminars/">Macro Finance Seminars</a></li>
+	<li id="menu-item-3701" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3701"><a href="https://fnce.wharton.upenn.edu/department-information/seminars/micro-seminars/">Micro Finance Seminars</a></li>
+	<li id="menu-item-2127" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-2127"><a href="https://fnce.wharton.upenn.edu/department-information/seminars/brown-bag-macro-seminars/">Brown Bag | Macro Seminars</a></li>
+	<li id="menu-item-2128" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-2128"><a href="https://fnce.wharton.upenn.edu/department-information/seminars/brown-bag-micro-seminars/">JLCFL | Micro Seminars</a></li>
+	<li id="menu-item-2132" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-2132"><a href="https://fnce.wharton.upenn.edu/department-information/seminars/recruiting-seminars/">Recruiting Seminars</a></li>
+</ul>
+</li>
+<li id="menu-item-2177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-2177"><a href="https://fnce.wharton.upenn.edu/programs/">Programs</a>
+<ul class="sub-menu">
+	<li id="menu-item-1947" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-1947"><a href="https://fnce.wharton.upenn.edu/programs/undergraduate/">Undergraduate Program</a>
+	<ul class="sub-menu">
+		<li id="menu-item-1949" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1949"><a href="https://fnce.wharton.upenn.edu/programs/undergraduate/course-descriptions/">Course Descriptions</a></li>
+		<li id="menu-item-1950" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1950"><a href="https://fnce.wharton.upenn.edu/programs/undergraduate/course-schedule/">Course Schedule</a></li>
+	</ul>
+</li>
+	<li id="menu-item-171" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-171"><a href="https://fnce.wharton.upenn.edu/programs/mba/">MBA Program</a>
+	<ul class="sub-menu">
+		<li id="menu-item-301" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-301"><a href="https://fnce.wharton.upenn.edu/programs/mba/course-descriptions/">MBA Course Descriptions</a></li>
+		<li id="menu-item-302" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-302"><a href="https://fnce.wharton.upenn.edu/programs/mba/course-schedule/">MBA Course Schedule</a></li>
+	</ul>
+</li>
+	<li id="menu-item-3695" class="enable-dropdown menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3695"><a>Dr. Bruce I. Jacobs Master of Science in Quantitative Finance (MSQF)</a>
+	<ul class="sub-menu">
+		<li id="menu-item-4075" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-4075"><a target="_blank" href="https://jacobs-msqf.wharton.upenn.edu/">Program Overview</a></li>
+		<li id="menu-item-4118" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4118"><a href="https://fnce.wharton.upenn.edu/programs/jacobs-msqf-program-course-descriptions/">MSQF Course Descriptions</a></li>
+		<li id="menu-item-4116" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-4116"><a href="https://fnce.wharton.upenn.edu/programs/jacobs-msqf-program-course-schedule/">MSQF Course Schedule</a></li>
+	</ul>
+</li>
+	<li id="menu-item-172" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-172"><a href="https://fnce.wharton.upenn.edu/programs/phd/">PhD Program</a>
+	<ul class="sub-menu">
+		<li id="menu-item-307" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-307"><a href="https://fnce.wharton.upenn.edu/phd-course-descriptions/">PhD Course Descriptions</a></li>
+		<li id="menu-item-309" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-309"><a href="https://fnce.wharton.upenn.edu/phd-course-schedule/">PhD Course Schedule</a></li>
+		<li id="menu-item-754" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-754"><a href="https://fnce.wharton.upenn.edu/programs/phd/dissertation-committee-and-proposal-defense/">Dissertation Committee and Proposal Defense</a></li>
+		<li id="menu-item-333" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-333"><a href="https://fnce.wharton.upenn.edu/programs/phd/meet-our-phd-students/">PhD Students</a></li>
+	</ul>
+</li>
+	<li id="menu-item-3365" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3365"><a target="_blank" href="https://globalyouth.wharton.upenn.edu/pre-baccalaureate-program/">Pre-baccalaureate Program</a></li>
+	<li id="menu-item-286" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-286"><a href="https://fnce.wharton.upenn.edu/programs/course-applications/">Applications for Courses and Independent Study Projects</a></li>
+	<li id="menu-item-3725" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-3725"><a href="https://fnce.wharton.upenn.edu/programs/ta-information/">TA Information</a></li>
+</ul>
+</li>
+<li id="menu-item-777" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-777"><a href="https://fnce.wharton.upenn.edu/phd-job-market/">PhD Job Market</a></li>
+<li id="menu-item-164" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-164"><a href="https://fnce.wharton.upenn.edu/department-information/">Department Information</a>
+<ul class="sub-menu">
+	<li id="menu-item-177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-177"><a href="https://fnce.wharton.upenn.edu/department-information/staff/">Staff</a></li>
+	<li id="menu-item-163" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-163"><a href="https://fnce.wharton.upenn.edu/department-information/contact-us/">Contact Us</a></li>
+	<li id="menu-item-165" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-165"><a href="https://fnce.wharton.upenn.edu/department-information/directions-office-map/">Directions</a></li>
+	<li id="menu-item-294" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-294"><a href="https://fnce.wharton.upenn.edu/it/">IT Resources and Guides</a></li>
+</ul>
+</li>
+</ul></div>					</nav><!-- #site-navigation -->
+									</div><!-- #main-menu-container -->
+				<div id="sub-menu-container" class="container-full-width">
+					<div id="sub-menu" class="container">
+						<nav id="sub-navigation" class="site-navigation" itemscope="itemscope" itemtype="http://schema.org/SiteNavigationElement" aria-label="Secondary navigation links">
+												</nav><!-- #site-navigation -->
+					</div><!-- #sub-menu -->
+				</div><!-- #sub-menu-container -->
+			</div>
+		</div>
+
+			</header><!-- #header -->
+
+
+	<div id="wrapper" class="site-content container-full-width">
+<div id="content-full" class="content-area">
+
+	<main id="main" class="site-main full-width" role="main">
+
+		<div class="wfp-primary-content">
+
+			
+				<div class="wfp-header">
+					<h1>Robert F. Stambaugh</h1>					<div class="group">
+						<div class="wfp-header-card">
+							<img src="https://faculty.wharton.upenn.edu/wp-content/uploads/2016/11/Robert_Stambaugh_3760_2429_crop-129x139.jpg" alt="Robert F. Stambaugh" class="wfp-header-photo">						</div>
+						<ul class="wfp-header-titles group">
+							<li>Miller Anderson & Sherrerd Professor of Finance,  Professor of Economics</li>						</ul>
+					</div>
+											<div class="wfp-header-contact group">
+							<h2 class="wfp-header-contact-title">Contact Information </h2>
+							<div class="wfp-header-contact-section">
+								<ul class="wfp-contact-information">
+								<li><strong>Primary Email: </strong><br/><a href="mailto:stambaugh@wharton.upenn.edu">stambaugh@wharton.upenn.edu</a></li><li><strong>Office Phone: </strong><br/><a href="tel:(215) 898-5734">(215) 898-5734</a></li>								</ul>
+								<ul class="wfp-contact-information wfp-contact-information--address">
+									<li><strong>office Address: </strong><br/><p>3251 Steinberg-Dietrich Hall<br />
+3620 Locust Walk<br />
+Philadelphia, PA 19104</p>
+</li>								</ul>
+							</div>
+						</div>
+										<div class="wfp-header-research group">
+						<p><strong>Research Interests: </strong>asset pricing, investments, econometrics</p>
+																			<p>
+								<strong>Links:</strong>
+								<a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2016/11/STAMBAUGHR-10020418-2025.pdf">CV</a>							</p>
+											</div>
+				</div>
+
+				<ul class="wfp-tabbed-navigation">
+											<li class="wfp-tabbed-navigation-tab wfp-tabbed-navigation-tab--active"><a id="wfp-overview" class="active" href="#wfp-tabbed-navigation-section--1">Overview</a>
+						</li>
+																<li class="wfp-tabbed-navigation-tab"><a id="wfp-research" href="#wfp-tabbed-navigation-section--2">Research</a>
+						</li>
+																<li class="wfp-tabbed-navigation-tab"><a id="wfp-teaching" href="#wfp-tabbed-navigation-section--3">Teaching</a>
+						</li>
+																<li class="wfp-tabbed-navigation-tab"><a id="wfp-awards" href="#wfp-tabbed-navigation-section--4">Awards and
+								Honors</a></li>
+																<li class="wfp-tabbed-navigation-tab"><a id="wfp-news" href="#wfp-tabbed-navigation-section--5">In
+								the News</a></li>
+																<li class="wfp-tabbed-navigation-tab"><a id="wfp-misc" href="#wfp-tabbed-navigation-section--6">
+								Data</a></li>
+									</ul>
+
+				<div class="wfp-tabbed-navigation-panel">
+											<div id="wfp-tabbed-navigation-section--1"
+						     class="wfp-tabbed-navigation-section wfp-tabbed-navigation-section--visible wfp-tabbed-navigation-section--overview">
+							<h2 class="wfp-tabbed-navigation-section-title expanded">Overview </h2>
+							<div class="wfp-tabbed-navigation-section-container">
+								<p>Robert Stambaugh is the Miller Anderson &amp; Sherrerd Professor of Finance at the Wharton School of the University of Pennsylvania.   He is a Fellow and former President of the American Finance Association, a Fellow of the Financial Management Association, and a Research Associate of the National Bureau of Economic Research.  Professor Stambaugh has been the editor of the <em>Journal of Finance</em>, an editor of the <em>Review of Financial Studies</em>, an associate editor of those journals as well as the <em>Journal of Financial Economics</em>, and a member of the first editorial committee of the <em>Annual Review of Financial Economics</em>.   He has published articles on topics including return predictability, asset pricing tests, portfolio choice, parameter uncertainty, liquidity risk, volatility, performance evaluation, investor sentiment, active-versus-passive investing, and sustainable investing.  His research awards include a Smith-Breeden first prize for an article in the <em>Journal of Finance</em> as well as two Fama-DFA first prizes and three second prizes for articles in the <em>Journal of Financial Economics</em>.  Before joining Wharton in 1988, he was Professor of Finance at the University of Chicago, where he received his PhD in 1981.   Professor Stambaugh visited Harvard University as a Marvin Bower Fellow in 1997-98.</p>
+							</div>
+							<a href="#" title="Continue Reading"
+							   class="wfp-tabbed-navigation-section-read-more">Continue Reading</a>
+						</div>
+					
+						<div id="wfp-tabbed-navigation-section--2" class="wfp-tabbed-navigation-section">
+							<h2 class="wfp-tabbed-navigation-section-title">Research </h2>
+							<div class="closed wfp-tabbed-navigation-section-container">
+																									<div id='jsGrid'>
+										<ul class="wfp-list wfp-list--research">
+											<li><p>Lubos Pastor, <a href="/profile/stambaug">Robert F. Stambaugh</a>, <a href="/profile/luket">Luke Taylor</a> (Working), <strong><a href="https://ssrn.com/abstract=7350104" target="_blank">Democratizing Private Markets: Equilibrium Predictions</a></strong>.</p><p><strong>Abstract: </strong>We study how opening private markets to retail investors affects investors and firms. Calibrating a production-based asset-pricing model, we find that democratization raises retail investors' welfare, but barely. Retail investors benefit little from democratization even if they face no extra cost or other disadvantage relative to institutional investors. The private market is simply too small for improved risk sharing to matter much. Whether or not private-market retail investing is costly, democratization substantially reshapes private firms' ownership and materially reduces their cost of capital, leading them to grow. Private equity earns a positive CAPM alpha, which shrinks after democratization.</p></li><li><p>Lubos Pastor, <a href="/profile/stambaug">Robert F. Stambaugh</a>, <a href="/profile/luket">Luke Taylor</a> (2025), <strong><a href="https://www.sciencedirect.com/science/article/pii/S0304405X25001813" target="_blank">Green Tilts</a></strong>, <em>Journal of Financial Economics</em>, 174 ().</p><p><strong>Abstract: </strong>We estimate financial institutions' portfolio tilts related to U.S. stocks' environmental, social, and governance (ESG) characteristics. From 2012 to 2023, ESG-related tilts consistently total about 6% of the investment industry's assets and rise from 17% to 27% of institutions' total portfolio tilts. Significant ESG tilts arise from the choice of stocks held and, especially, the weights on stocks held. The largest institutions tilt increasingly toward green stocks, while other institutions and households tilt increasingly brown. Divestment from brown stocks is typically partial rather than full, even for individual mutual funds. UNPRI signatories and European institutions tilt greener; banks tilt browner.</p></li><li><p>Tobias J. Moskowitz and <a href="/profile/stambaug">Robert F. Stambaugh</a> (Working), <strong><a href="https://ssrn.com/abstract=3878375" target="_blank">Pricing Without Mispricing</a></strong>.</p><p><strong>Abstract: </strong>We introduce a test of whether a given pricing model can be the model that would price assets if the market were efficient. The latter model is the benchmark for gauging inefficiency in the actual market. Our test asks whether a model assigns zero alpha to a strategy that uses only decade-old information, which even an inefficient market should price correctly. Persistence in the strategy's factor exposures gives the test power. The CAPM passes our test, but prominent multifactor models do not.</p></li><li><p>Lubos Pastor, <a href="/profile/stambaug">Robert F. Stambaugh</a>, Lucian A. Taylor (2025), <strong><a href="https://www.annualreviews.org/content/journals/10.1146/annurev-financial-113023-111705" target="_blank">Sustainable Investing</a></strong>, <em>Annual Review of Financial Economics</em>, 17 ().</p><p><strong>Abstract: </strong>We review the literature on sustainable investing, focusing on financial effects. First, we examine the effects of investor tastes on portfolio tilts and asset prices in a simple equilibrium setting. We establish novel connections, including a direct relation between the green portfolio tilt and the greenium. We also relate our framework to prior modeling of divestment. Finally, we review evidence related to the main concepts from our theoretical analysis, including the greenium, green tilts, climate risk, and investor tastes.</p></li><li><p>Lubos Pastor, <a href="/profile/stambaug">Robert F. Stambaugh</a>, Lucian A. Taylor, <strong><a href="https://ssrn.com/abstract=4998860" target="_blank">Carbon Burden</a></strong>.</p><p><strong>Abstract: </strong>We quantify the U.S. corporate sector's future carbon damages by computing its "carbon burden"—the present value of social costs of its future carbon emissions. Our baseline estimate of the carbon burden is 131% of total corporate equity value. Even with indirect emissions excluded, 13% of firms have carbon burdens exceeding their market capitalizations. The 30 largest emitters account for all the decarbonization of U.S. corporations predicted by 2050. Predicted emission reductions, and even firms' targets, fall short of the Paris Agreement. Carbon burden is priced: firms with higher burdens have higher costs of capital, even controlling for past emissions.</p></li><li><p>Lubos Pastor, <a href="/profile/stambaug">Robert F. Stambaugh</a>, <a href="/profile/luket">Luke Taylor</a> (2022), <strong><a href="https://doi.org/10.1016/j.jfineco.2022.07.007" target="_blank">Dissecting Green Returns</a></strong>, <em>Journal of Financial Economics</em>, 146 (), pp. 403-424.</p><p><strong>Abstract: </strong>Green assets delivered high returns in recent years. This performance reflects unexpectedly strong increases in environmental concerns, not high expected returns. German green bonds outperformed their higher-yielding non-green twins as the "greenium" widened, and U.S. green stocks outperformed brown as climate concerns strengthened. Despite that outperformance, we estimate lower expected returns for green stocks than for brown, consistent with theory. We estimate expected returns in two ways: ex ante, using implied costs of capital, and ex post, using realized returns purged of shocks from climate concerns and earnings. A theoretically motivated green factor explains much of value stocks' recent underperformance.</p></li><li><p><a href="/profile/stambaug">Robert F. Stambaugh</a>, Lubos Pastor, <a href="/profile/luket">Luke Taylor</a>, Min Zhu (2022), <strong><a href="https://www.nowpublishers.com/article/Details/CFR-0121" target="_blank">Diseconomies of Scale in Active Management: Robust Evidence</a></strong>, <em>Critical Finance Review</em>, 11 (), pp. 593-611.</p><p><strong>Abstract: </strong>We take a deeper look at the robustness of evidence presented by Pastor, Stambaugh, and Taylor (2015) and Zhu (2018), who find that an actively managed mutual fund's returns relate negatively to both fund size and the size of the active mutual fund industry. When we apply robust regression methods, we confirm both studies' inferences about scale diseconomies at the fund and industry levels. Moreover, data errors play no role, as both studies' results are insensitive to applying various error screens and using alternative return benchmarks. We reject constant returns to scale even after dropping 25% of the most extreme return observations. Finally, we caution that asymmetric removal of influential observations delivers biased conclusions about diseconomies of scale.</p></li><li><p><a href="/profile/geczy">Christopher Geczy</a>, <a href="/profile/stambaug">Robert F. Stambaugh</a>, David Levin (2021), <strong><a href="https://doi.org/10.1093/rapstu/raab004" target="_blank">Investing in Socially Responsible Mutual Funds</a></strong>, <em>The Review of Asset Pricing Studies</em>, 11 (2), pp. 309-351.</p><p><strong>Abstract: </strong>We construct optimal portfolios of mutual funds whose objectives include socially responsible investment (SRI). Comparing portfolios of these funds to those constructed from the broader fund universe reveals the cost of imposing the SRI constraint on investors seeking the highest Sharpe ratio. This SRI cost crucially depends on the investor’s views about asset pricing models and stock-picking skill by fund managers. To an investor who strongly believes in the CAPM and rules out managerial skill, that is, a market index investor, the cost of the SRI constraint is typically just a few basis points per month, measured in certainty-equivalent loss. To an investor who still disallows skill but instead believes to some degree in pricing models that associate higher returns with exposures to size, value, and momentum factors, the SRI constraint is much costlier, typically by at least 30 basis points per month. The SRI constraint imposes large costs on investors whose beliefs allow a substantial amount of fund-manager skill, that is, investors who heavily rely on individual funds’ track records to predict future performance</p></li><li><p>Lubos Pastor, <a href="/profile/stambaug">Robert F. Stambaugh</a>, <a href="/profile/luket">Luke Taylor</a> (2021), <strong><a href="https://doi.org/10.1016/j.jfineco.2020.12.011" target="_blank">Sustainable Investing in Equilibrium</a></strong>, <em>Journal of Financial Economics</em>, 142 (), pp. 550-571.</p><p><strong>Abstract: </strong>We model investing that considers environmental, social, and governance (ESG) criteria. In equilibrium, green assets have low expected returns because investors enjoy holding them and because green assets hedge climate risk. Green assets nevertheless outperform when positive shocks hit the ESG factor, which captures shifts in customers' tastes for green products and investors' tastes for green holdings. The ESG factor and the market portfolio price assets in a two-factor model. The ESG investment industry is largest when investors' ESG preferences differ most. Sustainable investing produces positive social impact by making firms greener and by shifting real investment toward green firms.</p></li><li><p>Lubos Pastor, <a href="/profile/stambaug">Robert F. Stambaugh</a>, <a href="/profile/luket">Luke Taylor</a> (2020), <strong><a href="https://doi.org/10.1016/j.jfineco.2020.06.005" target="_blank">Fund Tradeoffs</a></strong>, <em>Journal of Financial Economics</em>, 138 (), pp. 614-634.</p><p><strong>Abstract: </strong>We study tradeoffs among active mutual funds' characteristics. In both our equilibrium model and the data, funds with larger size, lower expense ratio, and higher turnover hold more-liquid portfolios. Portfolio liquidity, a concept introduced here, depends not only on the liquidity of the portfolio's holdings but also on the portfolio's diversification. We also confirm other model-predicted tradeoffs: Larger funds are cheaper. Larger and cheaper funds are less active, based on our new measure of activeness. Better-diversified funds hold less-liquid stocks; they are also larger, cheaper, and trade more. These tradeoffs provide novel evidence of diseconomies of scale in active management.</p></li>										</ul>
+									</div>
+									<script type="text/javascript">
+										jQuery(function () {
+											var $jsGrid = jQuery('#jsGrid');
+											$jsGrid.parents('.wfp-tabbed-navigation-section').bind('switch', function () {
+												if (!$jsGrid.hasClass('jsgrid')) {
+													$jsGrid.wfpGrid({"type":"faculty","pennkey":"stambaug","department":"dept-finance","endpoint":"\/wp-json\/wfp\/v2\/publication\/","baseUrl":"https:\/\/faculty.wharton.upenn.edu","canEdit":false});
+												}
+											});
+										});
+									</script>
+															</div>
+						</div>
+
+											<div id="wfp-tabbed-navigation-section--3" class="wfp-tabbed-navigation-section">
+							<h2 class="wfp-tabbed-navigation-section-title">Teaching </h2>
+							<div class="closed wfp-tabbed-navigation-section-container">
+															</div>
+						</div>
+
+					
+						<div id="wfp-tabbed-navigation-section--4" class="wfp-tabbed-navigation-section">
+							<h2 class="wfp-tabbed-navigation-section-title">Awards and
+								Honors </h2>
+							<div class="closed wfp-tabbed-navigation-section-container">
+								<ul class="wfp-list wfp-list--awards"><li>Outstanding Paper, Jacobs-Levy Equity Management Center for Quantitative Financial Research, 2023</li><li>Moskowitz Prize, 2022</li><li>Best Paper, Jacobs-Levy Equity Management Center for Quantitative Financial Research, 2022</li><li>Fama-DFA Prize (first-place paper, Journal of Financial Economics), 2021</li><li>AQR Insight Award distinguished paper, 2021</li><li>Best Paper, Jacobs-Levy Equity Management Center for Quantitative Financial Research, 2021</li><li>Outstanding Paper, Jacobs Levy Equity Managment Center for Quantitative Financial Research, 2020</li><li>AQR Insight Award honorable mention, 2019</li><li>Marshall Blume Prize, 2018</li><li>QMA Award for Best Paper on Investment Management, Western Finance Association Meetings, 2018</li><li>Best Paper, Jacobs Levy Equity Management Center for Quantitative Financial Research, 2017</li><li>Fama-DFA Prize (first-place paper, Journal of Financial Economics), 2016</li><li>Marshall Blume Prize Honorable Mention, 2016</li><li>Best Paper, Jacobs Levy Equity Managment Center for Quantitative Financial Research, 2015</li><li>Marshall Blume Prize honorable mention, 2014</li><li>Fellow of the American Finance Association, 2014</li><li>Whitebox Advisors first prize, 2012</li><li>AQR Insight Award honorable mention, 2012</li><li>Marshall Blume Prize honorable mention, 2012</li><li>Fellow of the Financial Management Association, 2010</li><li>Goldman Sachs Asset Management Award (Western Finance Association), 2007</li><li>Moskowitz Prize honorable mention, 2003</li><li>Geewax-Terker Prize honorable mention, 2002</li><li>Fama-DFA Prize (second-place paper, Journal of Financial Economics), 2002</li><li>Fama-DFA Prize (second-place paper, Journal of Financial Economics), 1999</li><li>Marvin Bower Fellow, Harvard University Graduate School of Business, 1997</li><li>Fama-DFA Prize (second-place paper, Journal of Financial Economics), 1997</li><li>Smith-Breeden Prize (first-prize paper, Journal of Finance), 1996</li><li>Batterymarch Fellow, 1985</li></ul>							</div>
+						</div>
+
+					
+						<div id="wfp-tabbed-navigation-section--5" class="wfp-tabbed-navigation-section">
+							<h2 class="wfp-tabbed-navigation-section-title">In the
+								News </h2>
+							<div class="closed wfp-tabbed-navigation-section-container">
+								<ul class="wfp-list wfp-list--news"><li><a href="http://news.morningstar.com/articlenet/article.aspx?id=638814">Are Younger Managers Better &#8211; Or Younger Strategies?</a>, Morningstar - 03/11/2014<a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2014/03/rekenthaler_031114.pdf" title="Are Younger Managers Better &#8211; Or Younger Strategies?" class="wfp-research-docs" target="_blank"><i class="icon-file-pdf"></i></a></li><li><a href="http://news.morningstar.com/articlenet/article.aspx?id=638485">The Argument That Fund Managers Are Improving</a>, Morningstar - 03/07/2014<a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2014/03/rekenthaler_030714.pdf" title="The Argument That Fund Managers Are Improving" class="wfp-research-docs" target="_blank"><i class="icon-file-pdf"></i></a></li><li><a href="http://money.cnn.com/2014/03/02/investing/young-old-mutual-funds/">New Mutual Funds Better Than Older Ones?</a>, CNN Money - 03/02/2014<a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2014/03/CNNMoney_Mar2_2014.pdf" title="New Mutual Funds Better Than Older Ones?" class="wfp-research-docs" target="_blank"><i class="icon-file-pdf"></i></a></li><li><a href="http://news.morningstar.com/articlenet/article.aspx?id=637552">Has Your Fund Become Too Large, Or Is Industry Size the Problem?</a>, Morningstar - 02/28/2014<a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2014/03/rekenthaler_022814.pdf" title="Has Your Fund Become Too Large, Or Is Industry Size the Problem?" class="wfp-research-docs" target="_blank"><i class="icon-file-pdf"></i></a></li><li><a href="http://news.morningstar.com/articlenet/article.aspx?id=637112">Are Young Managers All That?</a>, Morningstar - 02/27/2014<a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2014/03/rekenthaler_022714.pdf" title="Are Young Managers All That?" class="wfp-research-docs" target="_blank"><i class="icon-file-pdf"></i></a></li><li>Why New Mutual Funds are Better, Wall Street Journal - 02/21/2014<a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2014/03/WSJ_Feb21_2014_2.pdf" title="Why New Mutual Funds are Better" class="wfp-research-docs" target="_blank"><i class="icon-file-pdf"></i></a> <a href="#" class="wfp-objdetailbtn" data-type="content"><i class="wfp-toggle-arrow icon-"></i>Description</a><div class="wfp-pub-docs content"><p>&nbsp;</p>
+<p>
+<br type="_moz" /></p>
+</div></li><li><a href="http://www.nytimes.com/2009/06/20/your-money/individual-retirement-account-iras/20money.html?scp=5&#038;sq=robert%20stambaugh&#038;st=cse">For Older Investors, Old Rules May Not Apply</a>, New York Times - 06/19/2009</li><li><a href="http://www.nytimes.com/2009/03/29/your-money/stocks-and-bonds/29stra.html?_r=1&#038;scp=1&#038;sq=robert%20stambaugh&#038;st=cse">Now the Long Run Looks Riskier, Too</a>, New York Times - 03/28/2009</li><li><a href="http://www.nytimes.com/2008/12/28/your-money/28stra.html?scp=11&#038;sq=robert%20stambaugh&#038;st=cse">Yes, History Has Much to Say About This Market</a>, New York Times - 12/27/2008</li></ul><h2>Wharton Stories</h2><ul class="wfp-list"><li><a href="https://fnce.wharton.upenn.edu/story/mba-students-passion-policy-finance-football-related/">How This MBA Student’s Passion for Policy, Finance, and Football Are All Related</a>, Wharton Stories - 05/05/2017</li></ul>							</div>
+						</div>
+					
+						<div id="wfp-tabbed-navigation-section--6" class="wfp-tabbed-navigation-section">
+							<h2 class="wfp-tabbed-navigation-section-title">
+								Data							</h2>
+							<div class="closed wfp-tabbed-navigation-section-container">
+								<ul>
+<li><a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2016/11/liq_data_1962_2025.txt">Pastor-Stambaugh liquidity series</a></li>
+<li><a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2016/11/fig_aggliq1.pdf">Plot</a> of the aggregate liquidity level.</li>
+<li>Stambaugh and Yuan &#8220;Mispricing Factors&#8221; data (1/1963 &#8211; 12/2016):
+<ul>
+<li><a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2016/11/M4.csv">monthly factors</a></li>
+<li><a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2016/11/M4d.csv">daily factors</a></li>
+<li><a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2016/11/AnomalyRet_11_Long_Short_Spread.csv">11 anomaly returns</a></li>
+</ul>
+</li>
+<li><a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2016/11/Misp_Score.zip">Stambaugh, Yu, and Yuan mispricing measures for individual stocks</a> (7/1965 &#8211; 12/2016), <a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2016/11/Mispricing_Measure_Documentation.pdf">documentation</a></li>
+<li>Liu, Stambaugh and Yuan &#8220;Size and Value in China&#8221;:
+<ul>
+<li><a href="https://en.mingshiim.com/database">CH-3 factors, monthly, updated</a></li>
+<li><a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2016/11/CH_3_fac_daily_update_20211231.csv">CH-3 factors, daily (through 2021)</a></li>
+<li><a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2016/11/CH_4_fac_update_20211231.csv">CH-4 factors, monthly (through 2021)</a></li>
+<li><a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2016/11/CH_4_fac_daily_update_20211231.csv">CH-4 factors, daily (through 2021)</a></li>
+<li><a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2016/11/size_value_china_appendix_2_rev.pdf">Online Appendix (data items and WIND mappings)</a></li>
+</ul>
+</li>
+</ul>
+							</div>
+						</div>
+					
+
+				</div>
+			
+		</div>
+		<div class="wfp-secondary-content">
+			<div class="wfp-activity"><h2>Activity</h2><div class="wfp-activity-item"><h3 class="wfp-activity-title">Latest Research</h3><div class="wfp-activity-content">Lubos Pastor, <a href="/profile/stambaug">Robert F. Stambaugh</a>, <a href="/profile/luket">Luke Taylor</a> (Working), <strong><a href="https://ssrn.com/abstract=7350104" target="_blank">Democratizing Private Markets: Equilibrium Predictions</a></strong>.</div><span class="wfp-activity-more"><a href="#research">All Research</a></span></div><div class="wfp-activity-item"><h3 class="wfp-activity-title">In the News</h3><span"><a href="http://news.morningstar.com/articlenet/article.aspx?id=638814">Are Younger Managers Better &#8211; Or Younger Strategies?</a></span><div class="wfp-activity-content"><span class="wfp-activity-source">Morningstar - 03/11/2014</span></div><span class="wfp-activity-more"><a href="#news">All News</a></span></div><div class="wfp-activity-item"><h3 class="wfp-activity-title">Wharton Stories</h3><a href="https://fnce.wharton.upenn.edu/story/mba-students-passion-policy-finance-football-related/"><img src="https://dca.wharton.upenn.edu/wp-content/uploads/2017/05/JonHartley_atrium-hero2-600x230.jpg" alt="Closeup of Jon Hartley, WG'17, blonde in a navy suit, standing in the brick atrium of Steinberg-Dietrich Hall."/></a><a href="https://fnce.wharton.upenn.edu/story/mba-students-passion-policy-finance-football-related/">How This MBA Student’s Passion for Policy, Finance, and Football Are All Related</a><div class="wfp-activity-content"><p>For Jon Hartley, the power of economic forces and how they are applied has been an ongoing passion. Before he came to Wharton for his MBA, his interests led him to the Federal Reserve, investment management, Jeb Bush’s 2016 Presidential campaign, and even the NFL as a statistical analyst&#8230;.</p>
+<span class="wfp-activity-source">Wharton Stories - 05/05/2017</span></div><span class="wfp-activity-more"><a href="#news">All Stories</a></span></div></div>		</div>
+	</main>
+
+	<div class="sidebar sidebar--expanded sidebar--flyout">
+	<div class="sidebar-inner sidebar-inner--menu">
+		<aside>
+			<style>.sidebar{display:none!important}</style>		</aside>
+	</div>
+	<div id="widgets" class="widget-area sidebar-inner sidebar-inner--widgets"  role="complementary" itemscope="itemscope" itemtype="http://schema.org/WPSideBar">
+
+					</div><!-- end of #widgets -->
+</div>
+
+</div><!-- #content-full -->
+
+
+		<a data-scroll href="#header" title="Scroll to top link." id="scrollTop" class="martech-scroll-top">
+			<i class="icon-arrow-up2"></i>
+			<span>Back To Top</span>
+		</a>
+		</div><!-- end of #wrapper -->
+</div><!-- end of #container -->
+
+<footer id="footer" class="site-footer" role="contentinfo" itemscope="itemscope" itemtype="https://schema.org/WPFooter">
+	<div id="martech-footer-wrapper" class="wrapper footer-row">
+		<div class="footer-primary"> 		<a href="#" title="Additional Links" class="footer-primary-toggle">Additional Links <i class="icon-arrow-down3"></i></a>
+				<nav class="masonry additional-links" aria-label="Footer navigation links">
+						<ul class="footer-menu masonry-brick">
+				<div class="list-title">Finance Department</div>				<div class="menu-header-navigation-container"><ul id="menu-header-navigation" class="masonry-menu"><li id="menu-item-339" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-339"><a href="https://fnce.wharton.upenn.edu/">Home</a></li>
+<li id="menu-item-337" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-337"><a href="https://fnce.wharton.upenn.edu/faculty/">Faculty</a></li>
+<li id="menu-item-176" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-176"><a href="https://fnce.wharton.upenn.edu/research-listing/">Research</a></li>
+<li id="menu-item-293" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-293"><a href="https://fnce.wharton.upenn.edu/department-information/seminars/">Seminars</a></li>
+<li id="menu-item-2177" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-2177"><a href="https://fnce.wharton.upenn.edu/programs/">Programs</a></li>
+<li id="menu-item-777" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-777"><a href="https://fnce.wharton.upenn.edu/phd-job-market/">PhD Job Market</a></li>
+<li id="menu-item-164" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-164"><a href="https://fnce.wharton.upenn.edu/department-information/">Department Information</a></li>
+</ul></div>
+			</ul>
+									<ul class="footer-menu masonry-brick grid-sizer">
+				<li class="list-title">Programs</li>
+				<li><a href="https://undergrad.wharton.upenn.edu/">Undergraduate</a></li>
+				<li><a href="https://jacobs-msqf.wharton.upenn.edu/">Jacobs MSQF</a></li>
+				<li><a href="https://mba.wharton.upenn.edu">MBA</a></li>
+				<li><a href="https://executivemba.wharton.upenn.edu">EMBA</a></li>
+				<li><a href="https://doctoral.wharton.upenn.edu/">Doctorate</a></li>
+				<li><a href="https://executiveeducation.wharton.upenn.edu/">Executive Education</a></li>
+				<li><a href="https://executiveeducation.wharton.upenn.edu/online-learning/">Wharton Online</a></li>
+			</ul>
+			<ul class="footer-menu masonry-brick grid-sizer">
+				<li class="list-title">Locations</li>
+				<li><a href="https://www.wharton.upenn.edu/philadelphia-campus/">Philadelphia</a></li>
+				<li><a href="https://sf.wharton.upenn.edu/">San Francisco</a></li>
+			</ul>
+			<ul class="footer-menu masonry-brick">
+				<li class="list-title">The Power of Wharton</li>
+				<li><a href="https://global.wharton.upenn.edu/">Global Influence</a></li>
+				<li><a href="https://ai-analytics.wharton.upenn.edu/">AI & Analytics</a></li>
+				<li><a href="https://venturelab.upenn.edu/">Entrepreneurship & Innovation</a></li>
+			</ul>
+			<ul class="footer-menu masonry-brick">
+				<li class="list-title">Featured</li>
+				<li><a href="https://giving.aws.cloud.upenn.edu/fund?program=WHA&fund=342105&appeal=WHAWEB">Give to Wharton</a></li>
+				<li><a href="https://alumni.wharton.upenn.edu/">Alumni</a></li>
+				<li><a href="https://knowledge.wharton.upenn.edu/">Knowledge at Wharton</a></li>
+				<li><a href="https://recruiters-corp.wharton.upenn.edu/">Recruiters & Corporations</a></li>
+			</ul>
+			<ul class="footer-menu masonry-brick">
+				<li class="list-title">Wharton</li>
+				<li><a href="https://www.wharton.upenn.edu/faculty-directory/">Faculty</a></li>
+				<li><a href="https://www.wharton.upenn.edu/about-wharton/">About Us</a></li>
+				<li><a href="https://research.wharton.upenn.edu/research-centers/">Research Centers</a></li>
+				<li><a href="https://www.wharton.upenn.edu/departments/">Departments</a></li>
+			</ul>
+			<ul class="footer-menu masonry-brick">
+				<li class="list-title">Resources</li>
+				<li><a href="https://www.wharton.upenn.edu/contact-wharton/">Contact Us</a></li>
+				<li><a href="https://news.wharton.upenn.edu/">News</a></li>
+				<li><a href="https://inside.wharton.upenn.edu/">Faculty &amp; Staff</a></li>
+			</ul>
+		</nav>
+	</div>
+	<div class="footer-secondary">
+
+		<div class="copyright">
+			<a class="footer-logo hide-650" href="https://www.upenn.edu"><img src="https://fnce.wharton.upenn.edu/wp-content/plugins/martech-chupacabra/includes/images/penn-logo-white.svg" class="martech-footer-logo" alt="The University of Pennsylvania" ></a><div class="btn-wrap"><ul class="social-icons"><li class="twitter-icon"><a href="https://twitter.com/wharton" target="_blank"><span class="accessible-label">Twitter</span></a></li><li class="facebook-icon"><a href="https://www.facebook.com/WhartonSchool" target="_blank"><span class="accessible-label">Facebook</span></a></li><li class="linkedin-icon"><a href="https://www.linkedin.com/school/5290?pathWildcard=5290" target="_blank"><span class="accessible-label">LinkedIn</span></a></li><li class="youtube-icon"><a href="https://www.youtube.com/user/thewhartonschool" target="_blank"><span class="accessible-label">YouTube</span></a></li><li class="instagram-icon"><a href="https://www.instagram.com/whartonschool/" target="_blank"><span class="accessible-label">Instagram</span></a></li></ul><!-- .social-icons --><span class="give"><a href="https://giving.aws.cloud.upenn.edu/fund?program=WHA&fund=342105&appeal=WHAWEB" class="btn--secondary vc_btn vc_btn_red vc_btn-sm" target="_blank" title="Give to Wharton">Support Wharton</a></span></div><a href="https://apps.wharton.upenn.edu/authentication?service=wordpress&returnURL=https://fnce.wharton.upenn.edu/cms-login">&copy;</a>2026&nbsp;<a href="https://www.wharton.upenn.edu/">The Wharton School,</a> &nbsp;<a href="https://www.upenn.edu/">The University of Pennsylvania</a> &nbsp;<span>| &nbsp;<a href="https://fnce.wharton.upenn.edu" title="Finance Department">Finance Department</a>&nbsp; </span>| &nbsp;<a href="https://www.wharton.upenn.edu/privacy-policy/">Privacy&nbsp;Policy</a>&nbsp; | &nbsp;<a href="https://accessibility.web-resources.upenn.edu/get-help" target="_blank">Report&nbsp;Accessibility&nbsp;Issues&nbsp;and&nbsp;Get&nbsp;Help</a>					&nbsp; | &nbsp;
+	<a
+		href="#"
+		data-upenn-onetrust-settings
+		role="button">Manage&nbsp;Cookies</a>
+			</div>
+
+	</div>
+</div><!--/#martech-footer-wrapper-->
+	</footer><!-- #footer -->
+<script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/Chupe2-0-child/*","/wp-content/themes/responsive-mobile/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+      <script type="text/javascript">
+      (function ($) {
+        $(window).load(function(){
+          $('#footer-2-col').masonry({
+            columnWidth:  '.grid-sizer',
+            itemSelector: '.menu-item'
+          });
+        });
+        })(jQuery);
+      </script>
+    <script id="imagesloaded-js" src="https://fnce.wharton.upenn.edu/wp-includes/js/imagesloaded.min.js?ver=5.0.0"></script>
+<script id="masonry-js" src="https://fnce.wharton.upenn.edu/wp-includes/js/masonry.min.js?ver=4.2.2"></script>
+<script id="jquery-masonry-js" src="https://fnce.wharton.upenn.edu/wp-includes/js/jquery/jquery.masonry.min.js?ver=3.1.2b"></script>
+<script id="wpascript-js" src="https://fnce.wharton.upenn.edu/wp-content/plugins/honeypot/includes/js/wpa.js?ver=2.2.10"></script>
+<script id="wpascript-js-after">
+wpa_field_info = {"wpa_field_name":"eztivo7330","wpa_field_value":191942,"wpa_add_test":"no"}
+//# sourceURL=wpascript-js-after
+</script>
+<script id="wpaescript-js" src="https://fnce.wharton.upenn.edu/wp-content/plugins/wp-armour-extended/includes/js/wpae.js?ver=1.38"></script>
+<script id="responsive-scripts-js" src="https://fnce.wharton.upenn.edu/wp-content/themes/responsive-mobile/js/responsive-scripts.min.js?ver=1.2.5"></script>
+<script async data-wp-strategy="async" fetchpriority="low" id="comment-reply-js" src="https://fnce.wharton.upenn.edu/wp-includes/js/comment-reply.min.js?ver=7.1.4"></script>
+<script id="hoverIntent-js" src="https://fnce.wharton.upenn.edu/wp-includes/js/hoverIntent.min.js?ver=1.10.2"></script>
+<script id="martech-v3-script-js-extra">
+var ajax_object = {"ajaxurl":"https://fnce.wharton.upenn.edu/wp-admin/admin-ajax.php","ajaxnonce":"04933d0ba6"};
+//# sourceURL=martech-v3-script-js-extra
+</script>
+<script id="martech-v3-script-js" src="https://fnce.wharton.upenn.edu/wp-content/plugins/martech-chupacabra/includes/js/scripts.min.js?ver=3.52.9"></script>
+<script id="wdp_jsgrid-js" src="https://fnce.wharton.upenn.edu/wp-content/plugins/wharton-department-platform/includes/js/jsgrid.min.js?ver=1.5.2"></script>
+<script id="wdp_scripts-js" src="https://fnce.wharton.upenn.edu/wp-content/plugins/wharton-department-platform/includes/js/scripts.min.js?ver=1.8.4"></script>
+<script id="wp-emoji-settings" type="application/json">
+{"baseUrl":"https://s.w.org/images/core/emoji/17.0.2/72x72/","ext":".png","svgUrl":"https://s.w.org/images/core/emoji/17.0.2/svg/","svgExt":".svg","source":{"concatemoji":"https://fnce.wharton.upenn.edu/wp-includes/js/wp-emoji-release.min.js?ver=7.1.4"}}
+</script>
+<script type="module">
+/*! This file is auto-generated */
+var e="script#wp-emoji-settings",t=document.querySelector(e);if(!(t instanceof HTMLScriptElement))throw new Error("Element missing: "+e);const r=JSON.parse(t.text),s=(window._wpemojiSettings=r,"wpEmojiSettingsSupports"),o=["flag","emoji"];function i(e){try{var t={supportTests:e,timestamp:(new Date).valueOf()};sessionStorage.setItem(s,JSON.stringify(t))}catch(e){}}function c(e,t,n){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);t=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(n,0,0);const r=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);return t.every((e,t)=>e===r[t])}function p(e,t){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);var n=e.getImageData(16,16,1,1);for(let e=0;e<n.data.length;e++)if(0!==n.data[e])return!1;return!0}function u(e,t,n,r){switch(t){case"flag":return n(e,"\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!n(e,"\ud83c\udde8\ud83c\uddf6","\ud83c\udde8\u200b\ud83c\uddf6")&&!n(e,"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!r(e,"\ud83e\u1fac8")}return!1}function f(e,t,n,r){let a;const s=(a="undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?new OffscreenCanvas(300,150):document.createElement("canvas")).getContext("2d",{willReadFrequently:!0}),o=(s.textBaseline="top",s.font="600 32px Arial",{});return e.forEach(e=>{o[e]=t(s,e,n,r)}),o}function a(e){var t=document.createElement("script");t.src=e,t.defer=!0,document.head.appendChild(t)}r.supports={everything:!0,everythingExceptFlag:!0},new Promise(t=>{let n=function(){try{var e=JSON.parse(sessionStorage.getItem(s));if("object"==typeof e&&"number"==typeof e.timestamp&&(new Date).valueOf()<e.timestamp+604800&&"object"==typeof e.supportTests)return e.supportTests}catch(e){}return null}();if(!n){if("undefined"!=typeof Worker&&"undefined"!=typeof OffscreenCanvas&&"undefined"!=typeof URL&&URL.createObjectURL&&"undefined"!=typeof Blob)try{var e="postMessage("+f.toString()+"("+[JSON.stringify(o),u.toString(),c.toString(),p.toString()].join(",")+"));",r=new Blob([e],{type:"text/javascript"});const a=new Worker(URL.createObjectURL(r),{name:"wpTestEmojiSupports"});return void(a.onmessage=e=>{i(n=e.data),a.terminate(),t(n)})}catch(e){}i(n=f(o,u,c,p))}t(n)}).then(e=>{for(const n in e)r.supports[n]=e[n],r.supports.everything=r.supports.everything&&r.supports[n],"flag"!==n&&(r.supports.everythingExceptFlag=r.supports.everythingExceptFlag&&r.supports[n]);var t;r.supports.everythingExceptFlag=r.supports.everythingExceptFlag&&!r.supports.flag,r.supports.everything||((t=r.source||{}).concatemoji?a(t.concatemoji):t.wpemoji&&t.twemoji&&(a(t.twemoji),a(t.wpemoji)))});
+//# sourceURL=https://fnce.wharton.upenn.edu/wp-includes/js/wp-emoji-loader.min.js
+</script>
+<script></script>	<script id="upenn-onetrust-embed-controller">
+		(function () {
+			'use strict';
+
+			var notifiedFrames = new WeakSet();
+
+			function normalizeGroups(groups) {
+				if (Array.isArray(groups)) {
+					return groups.map(function (group) {
+						return String(group).trim();
+					});
+				}
+
+				if (typeof groups === 'string') {
+					return groups.split(',').map(function (group) {
+						return group.trim();
+					});
+				}
+
+				return [];
+			}
+
+			function syncWrapper(wrapper, groups) {
+				var iframe = wrapper.querySelector('[data-upenn-onetrust-embed]');
+				var placeholder = wrapper.querySelector('[data-upenn-onetrust-placeholder]');
+				var categories;
+				var source;
+				var allowed;
+
+				if (!iframe || !placeholder) {
+					return;
+				}
+
+				categories = iframe.getAttribute('data-upenn-onetrust-categories');
+
+				if (categories) {
+					categories = normalizeGroups(categories);
+				} else {
+					categories = normalizeGroups(iframe.getAttribute('data-upenn-onetrust-category'));
+				}
+
+				source = iframe.getAttribute('data-upenn-onetrust-src') || iframe.getAttribute('data-src');
+				allowed = categories.length > 0 && categories.every(function (category) {
+					return groups.indexOf(category) !== -1;
+				});
+
+				// Also keep previously cached, managed YouTube markup in privacy mode.
+				var privateSource = iframe.getAttribute('data-upenn-onetrust-private-src');
+				var desired = iframe.getAttribute('data-upenn-onetrust-embed') === 'youtube' && privateSource
+					? privateSource : (allowed ? source : privateSource);
+				if (iframe.getAttribute('src') && iframe.getAttribute('src') !== desired) {
+					var replacement = iframe.cloneNode(true);
+					replacement.removeAttribute('src');
+					iframe.parentNode.replaceChild(replacement, iframe);
+					iframe = replacement;
+				}
+				if (desired) {
+					if (!iframe.getAttribute('src')) { iframe.setAttribute('src', desired); }
+
+					placeholder.hidden = true;
+
+					if (iframe.getAttribute('src') && !notifiedFrames.has(iframe)) {
+						notifiedFrames.add(iframe);
+						document.dispatchEvent(new CustomEvent('upenn:onetrust-embed-loaded', {
+							detail: { iframe: iframe }
+						}));
+					}
+
+					return;
+				}
+
+				placeholder.hidden = false;
+			}
+
+			function syncAll(groups) {
+				var wrappers = document.querySelectorAll('[data-upenn-onetrust-wrapper]');
+				var normalized = normalizeGroups(groups);
+
+				Array.prototype.forEach.call(wrappers, function (wrapper) {
+					syncWrapper(wrapper, normalized);
+				});
+			}
+
+			function syncCurrentState() {
+				syncAll(window.upennConsentPolicy.getGroups());
+			}
+			window.upennConsentPolicy.subscribe(syncAll);
+
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', syncCurrentState);
+			} else {
+				syncCurrentState();
+			}
+
+			if (typeof MutationObserver === 'function') {
+				new MutationObserver(function () {
+					syncCurrentState();
+				}).observe(document.documentElement || document, {
+					childList: true,
+					subtree: true
+				});
+			}
+		}());
+	</script>
+
+	<script id="upenn-onetrust-settings-handler">
+		(function () {
+			'use strict';
+
+			/**
+			 * Prevent default link/button behavior and open the OneTrust
+			 * Preference Center when its public API is ready.
+			 */
+			function openPreferenceCenter(event) {
+				event.preventDefault();
+
+				if (
+					window.OneTrust &&
+					typeof window.OneTrust.ToggleInfoDisplay === 'function'
+				) {
+					window.OneTrust.ToggleInfoDisplay();
+				}
+			}
+
+			/**
+			 * Capture mode is required because SAC/PennKey event handling can
+			 * prevent the interaction from reaching a bubble-phase listener.
+			 */
+			document.addEventListener('click', function (event) {
+				var trigger;
+
+				if (
+					!event.target ||
+					typeof event.target.closest !== 'function'
+				) {
+					return;
+				}
+
+				trigger = event.target.closest('[data-upenn-onetrust-settings]');
+
+				if (!trigger) {
+					return;
+				}
+
+				openPreferenceCenter(event);
+			}, true);
+
+			/**
+			 * Support Space-key activation for anchors presented as buttons.
+			 * Native buttons already activate correctly and Enter on links is
+			 * supplied by the browser.
+			 */
+			document.addEventListener('keydown', function (event) {
+				var trigger;
+
+				if (
+					event.key !== ' ' ||
+					!event.target ||
+					typeof event.target.closest !== 'function'
+				) {
+					return;
+				}
+
+				trigger = event.target.closest('a[data-upenn-onetrust-settings][role="button"]');
+
+				if (!trigger) {
+					return;
+				}
+
+				openPreferenceCenter(event);
+			}, true);
+		}());
+	</script>
+	</body>
+</html>
