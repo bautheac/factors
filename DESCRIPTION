@@ -1,7 +1,7 @@
 Package: factors
 Type: Package
 Title: Clean time series datasets for asset pricing factors popular in the literature
-Version: 0.0.1.0
+Version: 0.1.0
 Authors@R: person("Olivier", "Bauthéac", email = "o.bautheac@gmail.com",
   role = c("aut", "cre"))
 Description: Various asset pricing research factor time series conveniently packaged for consumption in R.
@@ -11,6 +11,10 @@ LazyData: no
 Depends: R (>= 3.4.0)
 Imports: 
   data.table (>= 1.11.4)
-RoxygenNote: 7.1.1
+Suggests: 
+  testthat (>= 3.0.0),
+  FFresearch
+Config/testthat/edition: 3
+RoxygenNote: 8.1.1
 URL: http://bautheac.github.io/factors
 BugReports: https://github.com/bautheac/factors/issues
