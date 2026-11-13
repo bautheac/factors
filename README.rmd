@@ -9,19 +9,22 @@ bibliography: literature_files/references.bib
 ```{r, `load`, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.path = "README-")
 
-folder <- "literature_files"; dir.create(folder)
-download.file("https://www.dropbox.com/s/htnd7o9nnkk8ng8/references.bib?dl=1", paste(folder, "references.bib", sep = "/"))
-
 library(factors)
 data(list = c("fama_french", "stambaugh"), package = "factors")
 ```
 
 <style> body {text-align: justify} </style>
 
-[factors](https://github.com/bautheac/factors/) packages various asset pricing research factor time series for convenient consumption by R users. The data is pulled directly from authors' website. Install from  with `devtools::install_github("bautheac/factors")`.
+[factors](https://github.com/bautheac/factors/) packages various asset pricing research factor time series for convenient consumption by R users. The data is pulled directly from authors' website. Install from GitHub with `devtools::install_github("bautheac/factors")`.
+
+### All factors
+`all_factors()` returns every factor shipped by the package in a single long-format table, with a `source` column to tell French and Stambaugh factors apart:
+```{r, all_factors}
+head(all_factors())
+```
 
 ### Fama & French
-The `fama_french` dataset provides the return (factors) and level (risk free rate) time series for the classic Fama/French asset pricing factors as used in their three [@fama_cross_section_1992; @fama_common_1993; @fama_size_1995] and most recently five-factor [@fama_five_factor_2015; @fama_dissecting_2016; @fama_international_2017] asset pricing models very popular to the asset pricing enthusiasts:
+The `fama_french` dataset provides the return (factors) and level (risk free rate) time series for the classic Fama/French asset pricing factors as used in their three [@fama_cross_section_1992; @fama_common_1993; @fama_size_1995] and most recently five-factor [@fama_five_factor_2015; @fama_dissecting_2016; @fama_international_2017] asset pricing models very popular to the asset pricing enthusiasts. It is a snapshot of the `factors` dataset from the [FFresearch](https://github.com/bautheac/FFresearch/) package, not built here:
 ```{r, fama_french, echo = FALSE}
 head(fama_french)
 ```

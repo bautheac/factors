@@ -13,6 +13,11 @@ reference:
         Asset pricing factors data time series from Robert F. Stambaugh and collaborators:
     contents:
       - stambaugh
+  - title: All factors
+    desc: >
+        All shipped factor datasets in one long-format table:
+    contents:
+      - all_factors
 
 navbar:
   title: ~
