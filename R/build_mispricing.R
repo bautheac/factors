@@ -50,15 +50,5 @@ build_mispricing <- function(lines, frequency) {
     c("size", "management", "performance", "risk free rate")
   )
 
-  long <- data.table::melt(
-    wide,
-    id.vars = "period",
-    variable.name = "factor",
-    value.name = "value",
-    variable.factor = FALSE
-  )
-  long <- long[!is.na(long[["value"]])]
-  long[["frequency"]] <- frequency
-  data.table::setcolorder(long, c("frequency", "factor", "period", "value"))
-  long
+  reshape_factors(wide, frequency)
 }

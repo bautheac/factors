@@ -29,19 +29,14 @@ build_liquidity <- function(lines) {
     `traded liquidity` = as.numeric(vapply(fields, `[[`, character(1), 4L))
   )
 
-  long <- data.table::melt(
-    wide,
-    id.vars = "period",
-    variable.name = "factor",
-    value.name = "value",
-    variable.factor = FALSE
-  )
+  for (col in c("non-traded liquidity", "traded liquidity")) {
+    data.table::set(
+      wide,
+      i = which(wide[[col]] %in% -99),
+      j = col,
+      value = NA_real_
+    )
+  }
 
-  sentinel <- !is.na(long$value) & long$value == -99
-  long$value[sentinel] <- NA_real_
-  long <- long[!is.na(long$value)]
-
-  long$frequency <- "month"
-  data.table::setcolorder(long, c("frequency", "factor", "period", "value"))
-  long
+  reshape_factors(wide, "month")
 }
