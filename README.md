@@ -20,12 +20,12 @@ factors apart:
 head(all_factors())
 #>    source region frequency factor period value
 #>    <char> <char>    <char> <char> <char> <num>
-#> 1: French     US     month    CMA 196307 -1.15
-#> 2: French     US     month    CMA 196308 -0.38
-#> 3: French     US     month    CMA 196309  0.15
-#> 4: French     US     month    CMA 196310 -2.25
-#> 5: French     US     month    CMA 196311  2.27
-#> 6: French     US     month    CMA 196312 -0.25
+#> 1: French     US     month    CMA 197101 -0.05
+#> 2: French     US     month    CMA 197102 -0.78
+#> 3: French     US     month    CMA 197103 -2.67
+#> 4: French     US     month    CMA 197104  0.84
+#> 5: French     US     month    CMA 197105  0.21
+#> 6: French     US     month    CMA 197106 -1.69
 ```
 
 ### Fama & French
@@ -41,12 +41,12 @@ here:
 
     #>    region frequency factor period value
     #>    <fctr>    <fctr> <char> <char> <num>
-    #> 1:     US     month    CMA 196307 -1.15
-    #> 2:     US     month    CMA 196308 -0.38
-    #> 3:     US     month    CMA 196309  0.15
-    #> 4:     US     month    CMA 196310 -2.25
-    #> 5:     US     month    CMA 196311  2.27
-    #> 6:     US     month    CMA 196312 -0.25
+    #> 1:     US     month    CMA 197101 -0.05
+    #> 2:     US     month    CMA 197102 -0.78
+    #> 3:     US     month    CMA 197103 -2.67
+    #> 4:     US     month    CMA 197104  0.84
+    #> 5:     US     month    CMA 197105  0.21
+    #> 6:     US     month    CMA 197106 -1.69
 
 ### Stambaugh et al
 

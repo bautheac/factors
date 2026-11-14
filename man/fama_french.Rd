@@ -28,13 +28,17 @@ data(fama_french)
 \description{
 Return (factors) and level (risk free rate) time series for the Fama/French
   asset pricing factors. A snapshot of the \code{factors} dataset from the FFresearch
-  package, version 0.0.1.0 (bautheac/FFresearch master, including PR #17), snapshotted
-  2026-11-13; not built in this package. FFresearch is a build-time dependency only
+  package, version 0.0.1.0 (bautheac/FFresearch master, including PR #18), snapshotted
+  2026-11-14; not built in this package. FFresearch is a build-time dependency only
   (Suggests): there is no runtime dependency, and no French data is downloaded or
   parsed here. Rebuild with data-raw/rebuild_fama_french.R.
 }
 \details{
-US monthly factors cover 192602-202609.
+US factors cover 197101-202609 (monthly), 19710104-20260930 (daily)
+  and 1971-2025 (annual); regional history starts in July 1990 (monthly) or
+  1991 (annual). FFresearch trimmed every series to a 1971 start in a
+  maintainer decision (2026-11-14, see its docs/verification-spec-3.md);
+  this snapshot follows it.
 
   The FFresearch version used for the snapshot is recorded on the dataset
   itself: `attr(fama_french, "ffresearch_version")`.
