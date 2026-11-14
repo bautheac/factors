@@ -5,7 +5,7 @@
 #'   package, version 0.0.1.0 (bautheac/FFresearch master, including PR #17), snapshotted
 #'   2026-11-13; not built in this package. FFresearch is a build-time dependency only
 #'   (Suggests): there is no runtime dependency, and no French data is downloaded or
-#'   parsed here. Rebuild with development/rebuild_fama_french.R.
+#'   parsed here. Rebuild with data-raw/rebuild_fama_french.R.
 #'
 #' @format A \link[data.table:data.table-class]{data.table} with variables:
 #' \itemize{
@@ -74,7 +74,7 @@
 #'   market is the excess market return plus the risk free rate (MKTRF + RF);
 #'   risk free rate is RF.
 #'
-#'   Rebuild with development/rebuild_stambaugh.R (cached downloads; the build
+#'   Rebuild with data-raw/rebuild_stambaugh.R (cached downloads; the build
 #'   functions are tested against saved fixtures).
 #'
 #' @importFrom data.table data.table

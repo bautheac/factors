@@ -31,7 +31,7 @@ Return (factors) and level (risk free rate) time series for the Fama/French
   package, version 0.0.1.0 (bautheac/FFresearch master, including PR #17), snapshotted
   2026-11-13; not built in this package. FFresearch is a build-time dependency only
   (Suggests): there is no runtime dependency, and no French data is downloaded or
-  parsed here. Rebuild with development/rebuild_fama_french.R.
+  parsed here. Rebuild with data-raw/rebuild_fama_french.R.
 }
 \details{
 US monthly factors cover 192602-202609.

@@ -1,10 +1,10 @@
 # Rebuild data/stambaugh.rda from Stambaugh's published source files.
-# Run from the package root: Rscript development/rebuild_stambaugh.R
+# Run from the package root: Rscript data-raw/rebuild_stambaugh.R
 # Download URLs are scraped from the index page (the old ~stambaug file URLs
 # are dead) and the liquidity file name is discovered, not hard-coded.
 # Downloads are cached in git-ignored data-raw/cache/; a cached file is not
 # downloaded again, so a rebuild does not refetch unchanged files. To force
-# re-downloads, run with --force (Rscript development/rebuild_stambaugh.R
+# re-downloads, run with --force (Rscript data-raw/rebuild_stambaugh.R
 # --force); deleting data-raw/cache/ also forces re-download.
 
 pkgload::load_all(quiet = TRUE)

@@ -50,7 +50,7 @@ Region: US, verified against both papers. Their factor universes are ordinary
   market is the excess market return plus the risk free rate (MKTRF + RF);
   risk free rate is RF.
 
-  Rebuild with development/rebuild_stambaugh.R (cached downloads; the build
+  Rebuild with data-raw/rebuild_stambaugh.R (cached downloads; the build
   functions are tested against saved fixtures).
 }
 \keyword{datasets}

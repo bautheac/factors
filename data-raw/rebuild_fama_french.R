@@ -1,5 +1,5 @@
 # Rebuild data/fama_french.rda as a snapshot of FFresearch::factors.
-# Run from the package root: Rscript development/rebuild_fama_french.R
+# Run from the package root: Rscript data-raw/rebuild_fama_french.R
 # FFresearch is a build-time dependency only (Suggests); no French data is
 # downloaded or parsed here.
 

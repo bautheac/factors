@@ -3,7 +3,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^data-raw$
-^development$
 ^AGENTS\.md$
 ^\.worktrees$
 ^\.github$

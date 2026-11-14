@@ -7,7 +7,7 @@ test_that("fama_french is in sync with the installed FFresearch::factors", {
   cols <- c("region", "frequency", "factor", "period", "value")
   rerun <- paste(
     "Shipped fama_french differs from FFresearch::factors.",
-    "Rerun development/rebuild_fama_french.R to refresh the snapshot."
+    "Rerun data-raw/rebuild_fama_french.R to refresh the snapshot."
   )
 
   expect_true(all(cols %in% names(reference)), info = rerun)
