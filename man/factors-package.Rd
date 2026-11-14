@@ -4,20 +4,25 @@
 \name{factors-package}
 \alias{factors}
 \alias{factors-package}
-\title{factors: Clean time series datasets for asset pricing factors popular in the literature.}
+\title{factors: Clean Time Series Datasets for Asset Pricing Factors Popular in the Literature}
 \description{
 Various asset pricing research factor time series conveniently packaged for consumption in R.
 }
 \seealso{
 Useful links:
 \itemize{
-  \item \url{http://bautheac.github.io/factors}
+  \item \url{https://bautheac.github.io/factors/}
   \item Report bugs at \url{https://github.com/bautheac/factors/issues}
 }
 
 }
 \author{
 \strong{Maintainer}: Olivier Bauthéac \email{o.bautheac@gmail.com}
+
+Authors:
+\itemize{
+  \item Olivier Bauthéac \email{o.bautheac@gmail.com}
+}
 
 }
 \keyword{internal}

@@ -1,15 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://bautheac.github.io/factors/index.html</loc>
-  </url>
-  <url>
-    <loc>https://bautheac.github.io/factors/reference/factors-package.html</loc>
-  </url>
-  <url>
-    <loc>https://bautheac.github.io/factors/reference/fama_french.html</loc>
-  </url>
-  <url>
-    <loc>https://bautheac.github.io/factors/reference/stambaugh.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://bautheac.github.io/factors/404.html</loc></url>
+<url><loc>https://bautheac.github.io/factors/AGENTS.html</loc></url>
+<url><loc>https://bautheac.github.io/factors/authors.html</loc></url>
+<url><loc>https://bautheac.github.io/factors/index.html</loc></url>
+<url><loc>https://bautheac.github.io/factors/reference/all_factors.html</loc></url>
+<url><loc>https://bautheac.github.io/factors/reference/factors-package.html</loc></url>
+<url><loc>https://bautheac.github.io/factors/reference/fama_french.html</loc></url>
+<url><loc>https://bautheac.github.io/factors/reference/index.html</loc></url>
+<url><loc>https://bautheac.github.io/factors/reference/stambaugh.html</loc></url>
 </urlset>
+
