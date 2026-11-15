@@ -9,3 +9,4 @@
 ^README\.rmd$
 ^_config\.yml$
 ^literature_files$
+^pkgdown-site$

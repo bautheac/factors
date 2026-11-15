@@ -17,6 +17,6 @@ Suggests:
   pkgload
 Remotes: bautheac/FFresearch
 Config/testthat/edition: 3
-URL: https://bautheac.github.io/factors/
+URL: https://dev.bautheac.net/factors/
 BugReports: https://github.com/bautheac/factors/issues
 Config/roxygen2/version: 8.1.1

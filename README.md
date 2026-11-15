@@ -68,9 +68,9 @@ factors: management & performance (Stambaugh and Yuan 2016):
 
 ### finRes
 
-Although the [factors](https://bautheac.github.io/factors/) package is
+Although the [factors](https://dev.bautheac.net/factors/) package is
 self-contained it belongs to the
-[finRes](https://bautheac.github.io/finRes/) suite of packages where it
+[finRes](https://dev.bautheac.net/finRes/) suite of packages where it
 helps with asset pricing research and analysis.
 
 ## References

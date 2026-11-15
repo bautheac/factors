@@ -37,7 +37,7 @@ head(stambaugh)
 
 
 ### finRes   
-Although the [factors](https://bautheac.github.io/factors/) package is self-contained it belongs to the [finRes](https://bautheac.github.io/finRes/) suite of packages where it helps with asset pricing research and analysis.  
+Although the [factors](https://dev.bautheac.net/factors/) package is self-contained it belongs to the [finRes](https://dev.bautheac.net/finRes/) suite of packages where it helps with asset pricing research and analysis.  
 
 ## References
 
