@@ -16,12 +16,12 @@ permissions:
   deployments: write
 
 jobs:
-  deploy:
-    # The pkgdown-deploy environment's branch policy (repo settings) is the
-    # real gate; this `if` only guards the accidental case.
+  # FFresearch's source install needs about 4.5 GB, which the 6 GiB CI VMs
+  # cannot give a build, so the site is built on a GitHub-hosted runner and
+  # only the rsync (which needs the LAN and the deploy key) runs on ours.
+  build:
     if: github.ref == 'refs/heads/master'
-    environment: pkgdown-deploy
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: ubuntu-latest
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -37,11 +37,6 @@ jobs:
           use-public-rspm: true
 
       - uses: r-lib/actions/setup-r-dependencies@v2
-        # pak reuses a cached build of a GitHub package whatever its commit or
-        # version, so a stale suite package from an earlier job would be
-        # installed. A cache under the job's temp folder starts empty.
-        env:
-          R_PKG_CACHE_DIR: ${{ runner.temp }}/pkgcache
         with:
           extra-packages: any::pkgdown, any::pkgload
           needs: website
@@ -57,6 +52,26 @@ jobs:
           pkgdown::build_reference(override = ov)
           pkgdown::build_articles(override = ov)
           pkgdown::build_news(override = ov)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pkgdown-site
+          path: pkgdown-site
+          if-no-files-found: error
+
+  deploy:
+    needs: build
+    # The pkgdown-deploy environment's branch policy (repo settings) is the
+    # real gate; this `if` only guards the accidental case.
+    if: github.ref == 'refs/heads/master'
+    environment: pkgdown-deploy
+    runs-on: [self-hosted, Linux, X64]
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pkgdown-site
+          path: pkgdown-site
 
       - name: Deploy pkgdown site
         # The key's forced rrsync command on the dev-sites host confines it
